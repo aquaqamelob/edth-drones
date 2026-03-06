@@ -422,7 +422,27 @@ function PermissionsStage({
         System wymaga dostępu do kamery, mikrofonu, lokalizacji i czujników ruchu.
       </p>
 
-      {isIOS && (
+      {/* HTTPS Warning */}
+      {!localSecureContext && (
+        <div className="bg-red-900/50 border border-red-500 rounded-lg px-4 py-3 mb-4 max-w-xs">
+          <p className="text-red-300 text-sm font-bold mb-1">⚠️ Wymagane HTTPS</p>
+          <p className="text-red-400 text-xs">
+            Geolokalizacja i sensory wymagają bezpiecznego połączenia. 
+            Otwórz stronę przez <code className="bg-red-900 px-1 rounded">https://</code> lub <code className="bg-red-900 px-1 rounded">localhost</code>.
+          </p>
+        </div>
+      )}
+
+      {/* Geo Error */}
+      {geoError && (
+        <div className="bg-orange-900/30 border border-orange-700 rounded-lg px-4 py-3 mb-4 max-w-xs">
+          <p className="text-orange-400 text-sm">
+            📍 {geoError}
+          </p>
+        </div>
+      )}
+
+      {isIOS && localSecureContext && (
         <div className="bg-yellow-900/30 border border-yellow-700 rounded-lg px-4 py-3 mb-4 max-w-xs">
           <p className="text-yellow-400 text-sm">
             📱 iPhone: Po naciśnięciu przycisku pojawią się okna z prośbą o dostęp. Zezwól na wszystkie.
@@ -442,9 +462,14 @@ function PermissionsStage({
       ) : (
         <button
           onClick={handleRequest}
-          className="w-full max-w-xs py-4 px-6 bg-red-600 hover:bg-red-700 active:bg-red-800 rounded-xl font-bold text-lg transition-colors"
+          disabled={!localSecureContext}
+          className={`w-full max-w-xs py-4 px-6 rounded-xl font-bold text-lg transition-colors ${
+            localSecureContext 
+              ? 'bg-red-600 hover:bg-red-700 active:bg-red-800' 
+              : 'bg-zinc-700 cursor-not-allowed opacity-50'
+          }`}
         >
-          Zezwól i Kontynuuj
+          {localSecureContext ? 'Zezwól i Kontynuuj' : 'HTTPS Wymagane'}
         </button>
       )}
 
