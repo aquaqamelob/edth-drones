@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback, useRef, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import {
   useDeviceMotion,
@@ -17,6 +17,18 @@ import type { DroneReport, GroundTruth, ReportSubmissionResponse } from '@/lib/t
 type ReportStage = 'init' | 'permissions' | 'ready' | 'capturing' | 'processing' | 'complete' | 'error';
 
 export default function ReportPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+        <div className="animate-pulse">Ładowanie...</div>
+      </div>
+    }>
+      <ReportPageContent />
+    </Suspense>
+  );
+}
+
+function ReportPageContent() {
   const searchParams = useSearchParams();
   const [stage, setStage] = useState<ReportStage>('init');
   const [groundTruth, setGroundTruth] = useState<GroundTruth | null>(null);
