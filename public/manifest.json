@@ -1,0 +1,36 @@
+{
+  "name": "EDTH Drone Defense Network",
+  "short_name": "DroneReport",
+  "description": "Critical Infrastructure Protection - Drone Threat Reporting System",
+  "start_url": "/report",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#dc2626",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["security", "utilities"],
+  "lang": "pl",
+  "dir": "ltr",
+  "scope": "/",
+  "permissions": [
+    "camera",
+    "microphone",
+    "geolocation",
+    "accelerometer",
+    "gyroscope",
+    "magnetometer"
+  ]
+}
