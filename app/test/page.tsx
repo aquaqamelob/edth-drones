@@ -163,13 +163,13 @@ export default function TestPage() {
             <div className="bg-zinc-900 rounded-xl p-6">
               <h2 className="text-lg font-bold mb-4">
                 Żyroskop / Akcelerometr
-                <span className="text-sm text-gray-400 ml-2">({motionHistory.length} samples)</span>
+                <span className="text-sm text-gray-400 ml-2">({motionHistory.length} próbek)</span>
               </h2>
               
               {motion ? (
                 <div className="space-y-4 font-mono text-sm">
                   <div>
-                    <h3 className="text-gray-400 mb-1">Rotation Rate (°/s)</h3>
+                    <h3 className="text-gray-400 mb-1">Prędkość obrotu (°/s)</h3>
                     <div className="grid grid-cols-3 gap-2">
                       <div className="bg-zinc-800 rounded p-2">
                         <span className="text-gray-500">α</span>{' '}
@@ -187,7 +187,7 @@ export default function TestPage() {
                   </div>
 
                   <div>
-                    <h3 className="text-gray-400 mb-1">Acceleration (m/s²)</h3>
+                    <h3 className="text-gray-400 mb-1">Przyspieszenie (m/s²)</h3>
                     <div className="grid grid-cols-3 gap-2">
                       <div className="bg-zinc-800 rounded p-2">
                         <span className="text-gray-500">x</span>{' '}
@@ -292,23 +292,23 @@ export default function TestPage() {
               
               <div className="space-y-2 font-mono text-xs">
                 <div className="flex justify-between">
-                  <span className="text-gray-400">Device ID:</span>
+                  <span className="text-gray-400">ID urządzenia:</span>
                   <span className="truncate max-w-[200px]">{deviceMetadata.deviceId}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-400">Platform:</span>
+                  <span className="text-gray-400">Platforma:</span>
                   <span>{deviceMetadata.platform}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-400">Screen:</span>
+                  <span className="text-gray-400">Ekran:</span>
                   <span>{deviceMetadata.screenWidth}x{deviceMetadata.screenHeight} @{deviceMetadata.pixelRatio}x</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-400">Connection:</span>
+                  <span className="text-gray-400">Połączenie:</span>
                   <span>{deviceMetadata.connectionEffectiveType || deviceMetadata.connectionType || '—'}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-400">Battery:</span>
+                  <span className="text-gray-400">Bateria:</span>
                   <span>
                     {deviceMetadata.batteryLevel !== null 
                       ? `${Math.round(deviceMetadata.batteryLevel * 100)}%${deviceMetadata.batteryCharging ? ' ⚡' : ''}`
@@ -316,11 +316,11 @@ export default function TestPage() {
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-400">Language:</span>
+                  <span className="text-gray-400">Język:</span>
                   <span>{deviceMetadata.language}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-400">Timezone:</span>
+                  <span className="text-gray-400">Strefa czasowa:</span>
                   <span>{deviceMetadata.timezone}</span>
                 </div>
               </div>
@@ -328,11 +328,11 @@ export default function TestPage() {
 
             {/* Liveness Check Demo */}
             <div className="bg-zinc-900 rounded-xl p-6">
-              <h2 className="text-lg font-bold mb-4">Liveness Check</h2>
+              <h2 className="text-lg font-bold mb-4">Sprawdzenie Aktywności</h2>
               
               <div className="space-y-2">
                 <div className="flex justify-between">
-                  <span className="text-gray-400">Motion Samples:</span>
+                  <span className="text-gray-400">Próbki ruchu:</span>
                   <span className={motionHistory.length >= 10 ? 'text-green-400' : 'text-yellow-400'}>
                     {motionHistory.length} / 10 min
                   </span>
@@ -341,7 +341,7 @@ export default function TestPage() {
                 {motionHistory.length >= 10 && (
                   <>
                     <div className="flex justify-between">
-                      <span className="text-gray-400">Avg Rotation:</span>
+                      <span className="text-gray-400">Śr. obrotu:</span>
                       <span>
                         {(motionHistory.reduce((sum, m) => 
                           sum + Math.abs(m.rotationRate.alpha || 0) + Math.abs(m.rotationRate.beta || 0) + Math.abs(m.rotationRate.gamma || 0)

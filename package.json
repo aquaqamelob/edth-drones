@@ -9,12 +9,19 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@maxmind/geoip2-node": "^6.3.4",
+    "@tensorflow/tfjs": "^4.22.0",
+    "fft-js": "^0.0.12",
+    "geoip-lite": "^2.0.0",
+    "ipinfo": "^1.5.2",
+    "maxmind": "^5.0.5",
     "next": "16.1.6",
     "react": "19.2.3",
     "react-dom": "19.2.3"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/geoip-lite": "^1.4.4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",

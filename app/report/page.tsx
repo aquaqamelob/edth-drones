@@ -54,9 +54,10 @@ function ReportPageContent() {
     stream,
     initializeMedia,
     captureForDuration,
-    setVideoElement,
     setCanvasElement,
+    setVideoElement,
     cleanup: cleanupMedia,
+    error: mediaError,
   } = useMediaCapture({ videoDuration: 5000 });
 
   const { initializeAnalyzer, detectDroneSignature, cleanup: cleanupAnalyzer } = useAudioAnalyzer(stream);
@@ -82,15 +83,68 @@ function ReportPageContent() {
     setStage('permissions');
   }, [searchParams]);
 
-  // Initialize video element refs
+  // Connect video element to the hook and stream when available
   useEffect(() => {
-    if (videoElementRef.current) {
-      setVideoElement(videoElementRef.current);
+    // Only try to connect when stage is ready/capturing AND we have the video element
+    if ((stage === 'ready' || stage === 'capturing') && videoElementRef.current && stream) {
+      const video = videoElementRef.current;
+      
+      // Connect the video element to the hook
+      setVideoElement(video);
+      
+      // Also set srcObject directly to ensure it's connected
+      if (video.srcObject !== stream) {
+        console.log('[Report] Connecting stream to video element');
+        video.srcObject = stream;
+        
+        // Detect iOS
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+          (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+        
+        // iOS-specific attributes
+        video.setAttribute('playsinline', 'true');
+        video.setAttribute('webkit-playsinline', 'true');
+        video.setAttribute('autoplay', 'true');
+        video.muted = true;
+        
+        // iOS Safari requires load() before play() in some cases
+        if (isIOS) {
+          video.load();
+        }
+        
+        // Wait for video to be ready before playing
+        const playVideo = async () => {
+          try {
+            // Wait for loadedmetadata event on iOS
+            if (video.readyState < 2) {
+              await new Promise<void>((resolve) => {
+                video.onloadedmetadata = () => resolve();
+                // Timeout fallback
+                setTimeout(resolve, 1000);
+              });
+            }
+            await video.play();
+            console.log('[Report] Video playback started successfully');
+          } catch (err) {
+            console.warn('[Report] Video play failed:', err);
+            // Try again after a short delay (helps on some mobile browsers)
+            setTimeout(() => {
+              video.play().catch(e => console.warn('[Report] Retry play failed:', e));
+            }, 500);
+          }
+        };
+        
+        playVideo();
+      }
     }
+  }, [stage, stream, setVideoElement]);
+
+  // Set canvas element for frame capture
+  useEffect(() => {
     if (canvasElementRef.current) {
       setCanvasElement(canvasElementRef.current);
     }
-  }, [setVideoElement, setCanvasElement]);
+  }, [setCanvasElement]);
 
   // Request all permissions
   const handleRequestPermissions = useCallback(async () => {
@@ -103,7 +157,7 @@ function ReportPageContent() {
       // Initialize camera/mic
       const mediaGranted = await initializeMedia();
       if (!mediaGranted) {
-        setError('Camera or microphone access denied');
+        setError(mediaError || 'Dostęp do kamery lub mikrofonu zablokowany');
         setStage('error');
         return;
       }
@@ -113,7 +167,7 @@ function ReportPageContent() {
 
       setStage('ready');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to initialize sensors');
+      setError(err instanceof Error ? err.message : 'Nie udało się zainicjalizować czujników');
       setStage('error');
     }
   }, [requestMotion, requestOrientation, requestGeo, initializeMedia, initializeAnalyzer]);
@@ -174,7 +228,7 @@ function ReportPageContent() {
 
     } catch (err) {
       clearInterval(progressInterval);
-      setError(err instanceof Error ? err.message : 'Capture failed');
+      setError(err instanceof Error ? err.message : 'Przechwytywanie nie powiodło się');
       setStage('error');
     }
   }, [
@@ -583,7 +637,7 @@ function ReadyStage({
             {groundTruth ? (
               <>
                 <div className="w-2 h-2 bg-green-500 rounded-full" />
-                <span className="text-xs text-green-400">QR Verified</span>
+                <span className="text-xs text-green-400">QR Zweryfikowany</span>
               </>
             ) : location ? (
               <>
@@ -691,52 +745,221 @@ function CompleteStage({ result }: { result: ReportSubmissionResponse }) {
   const getThreatColor = (level: string) => {
     switch (level) {
       case 'RED': return 'bg-red-600 border-red-500';
+      case 'ORANGE': return 'bg-orange-600 border-orange-500';
       case 'YELLOW': return 'bg-yellow-600 border-yellow-500';
       default: return 'bg-green-600 border-green-500';
+    }
+  };
+
+  const getThreatBgColor = (level: string) => {
+    switch (level) {
+      case 'RED': return 'bg-red-900/30';
+      case 'ORANGE': return 'bg-orange-900/30';
+      case 'YELLOW': return 'bg-yellow-900/30';
+      default: return 'bg-green-900/30';
     }
   };
 
   const getThreatText = (level: string) => {
     switch (level) {
       case 'RED': return 'KRYTYCZNE - Służby powiadomione';
+      case 'ORANGE': return 'PODWYŻSZONE - Alert wysłany';
       case 'YELLOW': return 'OSTRZEŻENIE - Weryfikacja w toku';
       default: return 'OK - Zgłoszenie zarejestrowane';
     }
   };
 
+  const getMlThreatColor = (level: string) => {
+    switch (level) {
+      case 'HIGH': return 'text-red-400';
+      case 'MEDIUM': return 'text-orange-400';
+      case 'LOW': return 'text-yellow-400';
+      default: return 'text-green-400';
+    }
+  };
+
+  const fullLevel = result.fullThreatLevel || result.threatLevel;
+
   return (
-    <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
-      <div className={`w-24 h-24 rounded-full ${getThreatColor(result.threatLevel)} border-4 flex items-center justify-center mb-6`}>
+    <div className="flex-1 flex flex-col items-center p-6 overflow-auto">
+      {/* Main Result */}
+      <div className={`w-20 h-20 rounded-full ${getThreatColor(fullLevel)} border-4 flex items-center justify-center mb-4`}>
         {result.success ? (
-          <svg className="w-12 h-12 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg className="w-10 h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
           </svg>
         ) : (
-          <svg className="w-12 h-12 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg className="w-10 h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
           </svg>
         )}
       </div>
 
-      <h2 className="text-2xl font-bold mb-2">
+      <h2 className="text-xl font-bold mb-2">
         {result.success ? 'Zgłoszenie Wysłane' : 'Błąd'}
       </h2>
       
-      <div className={`px-4 py-2 rounded-full ${getThreatColor(result.threatLevel)} mb-4`}>
+      <div className={`px-4 py-2 rounded-full ${getThreatColor(fullLevel)} mb-4`}>
         <span className="font-bold text-sm uppercase">
-          {getThreatText(result.threatLevel)}
+          {getThreatText(fullLevel)}
         </span>
       </div>
 
-      <p className="text-gray-400 mb-2">{result.message}</p>
-      <p className="text-xs text-gray-600 font-mono">ID: {result.reportId}</p>
+      {/* Risk Score */}
+      {result.riskScore !== undefined && (
+        <div className="w-full max-w-sm mb-4">
+          <div className="flex justify-between text-sm mb-1">
+            <span className="text-gray-400">Wynik ryzyka</span>
+            <span className="font-bold">{result.riskScore}/100</span>
+          </div>
+          <div className="h-3 bg-zinc-800 rounded-full overflow-hidden">
+            <div 
+              className={`h-full ${result.riskScore >= 80 ? 'bg-red-500' : result.riskScore >= 60 ? 'bg-orange-500' : result.riskScore >= 30 ? 'bg-yellow-500' : 'bg-green-500'} transition-all`}
+              style={{ width: `${result.riskScore}%` }}
+            />
+          </div>
+          {result.confidence !== undefined && (
+            <div className="text-xs text-gray-500 mt-1 text-right">
+              Pewność: {result.confidence}%
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Drone Detection Results */}
+      {result.droneDetection && (
+        <div className={`w-full max-w-sm ${getThreatBgColor(fullLevel)} rounded-lg p-4 mb-4`}>
+          <h3 className="text-sm font-bold uppercase tracking-wider text-gray-400 mb-3">
+            Detekcja Drona (ML)
+          </h3>
+          
+          {/* Audio Detection */}
+          {result.droneDetection.audio && (
+            <div className="flex items-center justify-between py-2 border-b border-white/10">
+              <div className="flex items-center gap-2">
+                <span>🎤</span>
+                <span className="text-sm">Audio ML</span>
+              </div>
+              <div className="text-right">
+                <div className={`font-bold ${result.droneDetection.audio.detected ? getMlThreatColor(result.droneDetection.audio.threatLevel) : 'text-green-400'}`}>
+                  {result.droneDetection.audio.detected ? `${result.droneDetection.audio.type || 'Dron'}` : 'Brak'}
+                </div>
+                <div className="text-xs text-gray-500">{result.droneDetection.audio.confidence}%</div>
+              </div>
+            </div>
+          )}
+          
+          {/* Visual Detection */}
+          {result.droneDetection.visual && (
+            <div className="flex items-center justify-between py-2 border-b border-white/10">
+              <div className="flex items-center gap-2">
+                <span>📷</span>
+                <span className="text-sm">Wizualna ML</span>
+              </div>
+              <div className="text-right">
+                <div className={`font-bold ${result.droneDetection.visual.detected ? getMlThreatColor(result.droneDetection.visual.threatLevel) : 'text-green-400'}`}>
+                  {result.droneDetection.visual.detected ? `${result.droneDetection.visual.type || 'Dron'}` : 'Brak'}
+                </div>
+                <div className="text-xs text-gray-500">{result.droneDetection.visual.confidence}%</div>
+              </div>
+            </div>
+          )}
+          
+          {/* FFT Analysis */}
+          {result.droneDetection.fft && (
+            <div className="flex items-center justify-between py-2">
+              <div className="flex items-center gap-2">
+                <span>📊</span>
+                <span className="text-sm">FFT Audio</span>
+              </div>
+              <div className="text-right">
+                <div className={`font-bold ${result.droneDetection.fft.detected ? 'text-orange-400' : 'text-green-400'}`}>
+                  {result.droneDetection.fft.detected ? `${result.droneDetection.fft.estimatedType || 'Sygnał'}` : 'Brak'}
+                </div>
+                {result.droneDetection.fft.detected && (
+                  <div className="text-xs text-gray-500">{result.droneDetection.fft.dominantFrequency}Hz</div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Score Breakdown */}
+      {result.scoreBreakdown && (
+        <div className="w-full max-w-sm bg-zinc-900 rounded-lg p-4 mb-4">
+          <h3 className="text-sm font-bold uppercase tracking-wider text-gray-400 mb-3">
+            Rozkład Punktów
+          </h3>
+          <div className="space-y-2 text-sm">
+            <ScoreRow label="Audio" score={result.scoreBreakdown.audio} max={30} icon="🔊" />
+            <ScoreRow label="Lokalizacja" score={result.scoreBreakdown.location} max={25} icon="📍" />
+            <ScoreRow label="IP/Sieć" score={result.scoreBreakdown.ip} max={20} icon="🌐" />
+            <ScoreRow label="Klaster" score={result.scoreBreakdown.clustering} max={15} icon="👥" />
+            <ScoreRow label="Walidacja" score={result.scoreBreakdown.validation} max={10} icon="✓" />
+          </div>
+        </div>
+      )}
+
+      {/* Risk Factors */}
+      {result.riskFactors && result.riskFactors.length > 0 && (
+        <div className="w-full max-w-sm bg-red-900/20 border border-red-900 rounded-lg p-4 mb-4">
+          <h3 className="text-sm font-bold uppercase tracking-wider text-red-400 mb-2">
+            Czynniki Ryzyka
+          </h3>
+          <ul className="text-sm text-red-300 space-y-1">
+            {result.riskFactors.map((factor, i) => (
+              <li key={i} className="flex items-start gap-2">
+                <span className="text-red-500">•</span>
+                <span>{factor}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Required Actions */}
+      {result.requiredActions && result.requiredActions.length > 0 && (
+        <div className="w-full max-w-sm bg-orange-900/20 border border-orange-700 rounded-lg p-4 mb-4">
+          <h3 className="text-sm font-bold uppercase tracking-wider text-orange-400 mb-2">
+            Wymagane Działania
+          </h3>
+          <ul className="text-sm text-orange-300 space-y-1">
+            {result.requiredActions.map((action, i) => (
+              <li key={i} className="flex items-start gap-2">
+                <span className="text-orange-500">→</span>
+                <span>{action}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      <p className="text-gray-400 text-sm mb-2">{result.message}</p>
+      <p className="text-xs text-gray-600 font-mono mb-4">ID: {result.reportId}</p>
 
       <button
         onClick={() => window.location.reload()}
-        className="mt-8 px-6 py-3 bg-zinc-800 hover:bg-zinc-700 rounded-lg transition-colors"
+        className="px-6 py-3 bg-zinc-800 hover:bg-zinc-700 rounded-lg transition-colors"
       >
         Nowe Zgłoszenie
       </button>
+    </div>
+  );
+}
+
+function ScoreRow({ label, score, max, icon }: { label: string; score: number; max: number; icon: string }) {
+  const percentage = Math.max(0, (score / max) * 100);
+  const color = score >= max * 0.7 ? 'bg-red-500' : score >= max * 0.4 ? 'bg-yellow-500' : 'bg-green-500';
+  
+  return (
+    <div className="flex items-center gap-2">
+      <span className="w-6 text-center">{icon}</span>
+      <span className="w-20 text-gray-400">{label}</span>
+      <div className="flex-1 h-2 bg-zinc-800 rounded-full overflow-hidden">
+        <div className={`h-full ${color}`} style={{ width: `${percentage}%` }} />
+      </div>
+      <span className="w-12 text-right text-gray-500">{score}/{max}</span>
     </div>
   );
 }

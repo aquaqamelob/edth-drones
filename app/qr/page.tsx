@@ -102,7 +102,7 @@ export default function QRGeneratorPage() {
 <html>
 <head>
   <meta charset="utf-8">
-  <title>EDTH Drone Defense - QR Codes</title>
+  <title>EDTH Sieć Obronna - Kody QR</title>
   <style>
     body { font-family: Arial, sans-serif; }
     .qr-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; padding: 20px; }
@@ -115,14 +115,14 @@ export default function QRGeneratorPage() {
   </style>
 </head>
 <body>
-  <h1 style="text-align: center; color: #dc2626;">EDTH Drone Defense Network - QR Codes</h1>
+  <h1 style="text-align: center; color: #dc2626;">EDTH Sieć Obrony Przed Dronami - Kody QR</h1>
   <div class="qr-grid">
     ${locations.map(loc => `
       <div class="qr-item">
-        <img src="${getQRImageUrl(getReportUrl(loc))}" alt="QR Code">
+        <img src="${getQRImageUrl(getReportUrl(loc))}" alt="Kod QR">
         <div class="qr-title">${loc.name}</div>
         <div class="qr-coords">${loc.lat.toFixed(6)}, ${loc.lng.toFixed(6)}</div>
-        <div class="qr-label">ZGŁOŚ DRONA / REPORT DRONE</div>
+        <div class="qr-label">ZGŁOŚ DRONA</div>
       </div>
     `).join('')}
   </div>

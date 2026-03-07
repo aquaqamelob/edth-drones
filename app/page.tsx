@@ -10,9 +10,9 @@ export default function Home() {
             <div className="w-4 h-4 rounded-full bg-red-500 animate-pulse" />
             <span className="text-red-300 uppercase tracking-wider text-sm font-bold">System Aktywny</span>
           </div>
-          <h1 className="text-4xl font-bold mb-2">EDTH Defense Network</h1>
+          <h1 className="text-4xl font-bold mb-2">EDTH Sieć Obronna</h1>
           <p className="text-red-200">
-            Distributed Drone Threat Detection for Critical Infrastructure
+            Rozproszone Wykrywanie Zagrożeń Dronowych dla Infrastruktury Krytycznej
           </p>
         </div>
       </header>
@@ -190,8 +190,8 @@ export default function Home() {
 
         {/* Footer */}
         <footer className="mt-12 pt-6 border-t border-zinc-800 text-center text-sm text-gray-600">
-          <p>EDTH Drone Defense Network v1.0</p>
-          <p className="mt-1">Critical Infrastructure Protection System</p>
+          <p>EDTH Sieć Obrony Przed Dronami v1.0</p>
+          <p className="mt-1">System Ochrony Infrastruktury Krytycznej</p>
         </footer>
       </main>
     </div>

@@ -125,12 +125,46 @@ export interface DroneReport {
   droneCount?: number;
 }
 
+export interface DroneDetectionResult {
+  detected: boolean;
+  type: string | null;
+  confidence: number;
+  threatLevel: 'NONE' | 'LOW' | 'MEDIUM' | 'HIGH';
+}
+
+export interface FFTDetectionResult {
+  detected: boolean;
+  dominantFrequency: number;
+  estimatedType: string | null;
+  confidence: number;
+}
+
+export interface ScoreBreakdown {
+  audio: number;
+  location: number;
+  ip: number;
+  clustering: number;
+  validation: number;
+}
+
 export interface ReportSubmissionResponse {
   success: boolean;
   reportId: string;
-  threatLevel: 'GREEN' | 'YELLOW' | 'RED';
+  threatLevel: 'GREEN' | 'YELLOW' | 'ORANGE' | 'RED';
+  fullThreatLevel?: 'GREEN' | 'YELLOW' | 'ORANGE' | 'RED';
+  riskScore?: number;
+  confidence?: number;
   message: string;
   timestamp: string;
+  riskFactors?: string[];
+  requiredActions?: string[];
+  droneDetection?: {
+    audio: DroneDetectionResult | null;
+    visual: DroneDetectionResult | null;
+    fft: FFTDetectionResult | null;
+  };
+  scoreBreakdown?: ScoreBreakdown;
+  riskAssessment?: FullRiskAssessment;
 }
 
 export type SensorPermissionStatus = 'granted' | 'denied' | 'prompt' | 'unavailable';
@@ -142,3 +176,171 @@ export interface SensorPermissions {
   motion: SensorPermissionStatus;
   orientation: SensorPermissionStatus;
 }
+
+// ==================== FFT / Audio Analysis Types ====================
+
+export interface FFTAnalysisResult {
+  frequencies: number[];
+  magnitudes: number[];
+  dominantFrequency: number;
+  dominantMagnitude: number;
+  spectralCentroid: number;
+  spectralFlatness: number;
+}
+
+export interface DroneAudioDetection {
+  detected: boolean;
+  confidence: number;
+  estimatedType: 'small' | 'medium' | 'large' | 'racing' | 'unknown' | null;
+  dominantFrequency: number;
+  harmonicsDetected: number;
+  powerInDroneBand: number;
+  totalPower: number;
+  signalToNoiseRatio: number;
+  reasons: string[];
+}
+
+// ==================== IP Risk Types ====================
+
+export interface IPAnalysis {
+  ip: string;
+  riskLevel: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  riskScore: number;
+  country: string | null;
+  countryName: string | null;
+  region: string | null;
+  city: string | null;
+  timezone: string | null;
+  coordinates: { lat: number; lon: number } | null;
+  isHighRiskCountry: boolean;
+  isElevatedRiskCountry: boolean;
+  isPotentialVPN: boolean;
+  isPotentialDatacenter: boolean;
+  isPrivateIP: boolean;
+  isTor: boolean;
+  reasons: string[];
+  recommendations: string[];
+}
+
+export interface GeoAnomalyCheck {
+  deviceLat: number;
+  deviceLon: number;
+  ipLat: number;
+  ipLon: number;
+  distanceKm: number;
+  isAnomaly: boolean;
+  anomalyThresholdKm: number;
+}
+
+// ==================== ML Classification Types ====================
+
+export interface MLPrediction {
+  className: string;
+  confidence: number;
+  allProbabilities: { class: string; probability: number }[];
+  inferenceTimeMs: number;
+}
+
+export interface DroneMLClassification {
+  isDrone: boolean;
+  droneType: string | null;
+  confidence: number;
+  threatLevel: 'NONE' | 'LOW' | 'MEDIUM' | 'HIGH';
+  details: MLPrediction | null;
+}
+
+// ==================== Combined Risk Assessment Types ====================
+
+export type FullThreatLevel = 'GREEN' | 'YELLOW' | 'ORANGE' | 'RED';
+
+export interface RiskFactor {
+  name: string;
+  category: 'audio' | 'location' | 'ip' | 'clustering' | 'validation';
+  score: number;
+  maxScore: number;
+  triggered: boolean;
+  details: string;
+}
+
+export interface FullRiskAssessment {
+  threatLevel: FullThreatLevel;
+  totalScore: number;
+  maxPossibleScore: number;
+  confidence: number;
+  
+  // Category scores
+  audioScore: number;
+  locationScore: number;
+  ipScore: number;
+  clusteringScore: number;
+  validationScore: number;
+  
+  // Factor breakdown
+  riskFactors: RiskFactor[];
+  triggeringFactors: RiskFactor[];
+  mitigatingFactors: RiskFactor[];
+  
+  // Action items
+  recommendations: string[];
+  requiredActions: string[];
+  
+  // Metadata
+  timestamp: string;
+  processingTimeMs: number;
+}
+
+// ==================== Enhanced Report Types ====================
+
+export interface EnhancedDroneReport extends DroneReport {
+  // Audio analysis
+  audioAnalysis?: DroneAudioDetection;
+  
+  // ML classifications
+  audioClassification?: DroneMLClassification;
+  imageClassification?: DroneMLClassification;
+  
+  // IP/network analysis
+  ipAnalysis?: IPAnalysis;
+  geoAnomaly?: GeoAnomalyCheck;
+  
+  // Combined risk
+  riskAssessment?: FullRiskAssessment;
+}
+
+// ==================== Infrastructure Types ====================
+
+export interface CriticalInfrastructure {
+  id: string;
+  name: string;
+  type: 'railway' | 'airport' | 'power_station' | 'government' | 'military' | 'other';
+  latitude: number;
+  longitude: number;
+  radius: number; // meters
+  alertThreshold: FullThreatLevel;
+}
+
+export interface InfrastructureProximity {
+  infrastructure: CriticalInfrastructure;
+  distanceMeters: number;
+  withinAlertRadius: boolean;
+}
+
+// ==================== Clustering Types ====================
+
+export interface ReportCluster {
+  centroidLat: number;
+  centroidLon: number;
+  reportCount: number;
+  uniqueDevices: number;
+  firstReportTime: number;
+  lastReportTime: number;
+  averageConfidence: number;
+  threatLevel: FullThreatLevel;
+}
+
+export interface ClusterAnalysis {
+  clusters: ReportCluster[];
+  activeClusterCount: number;
+  highThreatClusters: ReportCluster[];
+}
+

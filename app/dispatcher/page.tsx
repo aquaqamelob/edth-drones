@@ -112,7 +112,7 @@ export default function DispatcherPage() {
         <div className="bg-zinc-900 rounded-xl p-8 max-w-md w-full">
           <div className="flex items-center justify-center gap-3 mb-6">
             <div className="w-4 h-4 rounded-full bg-red-500" />
-            <h1 className="text-xl font-bold text-white">EDTH Dispatcher Console</h1>
+            <h1 className="text-xl font-bold text-white">EDTH Konsola Dyspozytora</h1>
           </div>
           
           <p className="text-gray-400 text-sm text-center mb-6">
@@ -152,7 +152,7 @@ export default function DispatcherPage() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse" />
-            <span className="font-bold">EDTH Dispatcher Console</span>
+            <span className="font-bold">EDTH Konsola Dyspozytora</span>
             <span className="text-xs text-gray-500">|</span>
             <span className="text-xs text-gray-400">
               Ostatnia aktualizacja: {lastUpdate?.toLocaleTimeString('pl-PL')}
@@ -343,7 +343,7 @@ function IncidentDetail({ cluster }: { cluster: ReportCluster }) {
       </div>
 
       <div className="bg-zinc-800 rounded-xl p-4 mb-6">
-        <h3 className="text-sm text-gray-400 mb-3">Timeline</h3>
+        <h3 className="text-sm text-gray-400 mb-3">Oś Czasu</h3>
         <div className="space-y-2 text-sm">
           <div className="flex justify-between">
             <span>Pierwsze zgłoszenie:</span>

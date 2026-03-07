@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { writeFile, mkdir } from 'fs/promises';
+import { writeFile, mkdir, readFile } from 'fs/promises';
 import { join } from 'path';
 import crypto from 'crypto';
+import { analyzeIP, checkGeoAnomaly, checkRateLimit, cleanupRateLimits } from '@/lib/ip-risk';
+import { calculateRiskAssessment, type RiskAssessmentInput, type ThreatLevel, type CombinedRiskAssessment } from '@/lib/risk-assessment';
+import { performFFT, detectDroneSignature, type DroneAudioSignature } from '@/lib/fft';
+import { simulateAudioClassification, simulateImageClassification, type DroneClassification } from '@/lib/ml-model';
+import type { IPAnalysis, GeoAnomalyCheck } from '@/lib/types';
 
 // Railway line coordinates for proximity check (example: Warsaw area)
 const RAILWAY_CORRIDORS = [
@@ -36,6 +41,8 @@ interface ThreatAssessment {
 }
 
 export async function POST(request: NextRequest) {
+  const startTime = performance.now();
+  
   try {
     const formData = await request.formData();
     const dataJson = formData.get('data') as string;
@@ -53,18 +60,54 @@ export async function POST(request: NextRequest) {
     const reportId = reportData.id || `rpt_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
     const timestamp = new Date().toISOString();
 
-    // Get location for threat assessment
+    // ==================== IP ANALYSIS ====================
+    // Get client IP
+    const clientIP = getClientIP(request);
+    const ipAssessment: IPAnalysis = analyzeIP(clientIP);
+    
+    // Check rate limiting
+    const rateLimit = checkRateLimit(clientIP);
+    if (rateLimit.isRateLimited) {
+      console.log(`[REPORT] Rate limited: ${clientIP}`);
+      return NextResponse.json(
+        { success: false, error: 'Too many requests. Please wait.' },
+        { status: 429 }
+      );
+    }
+    
+    // Cleanup old rate limit entries periodically
+    if (Math.random() < 0.1) {
+      cleanupRateLimits();
+    }
+
+    // ==================== LOCATION ANALYSIS ====================
     const location = reportData.groundTruth || reportData.deviceLocation;
     const lat = location?.latitude;
     const lng = location?.longitude;
+    
+    // Check geo anomaly (IP location vs device GPS)
+    let geoAnomaly: GeoAnomalyCheck | null = null;
+    if (lat && lng && ipAssessment.coordinates) {
+      const anomalyCheck = checkGeoAnomaly(lat, lng, ipAssessment);
+      if (anomalyCheck) {
+        geoAnomaly = anomalyCheck;
+      }
+    }
 
-    // Assess threat level
-    const assessment = assessThreat(
-      lat,
-      lng,
-      reportData.liveness?.confidence || 0,
-      reportData.deviceMetadata?.deviceId
-    );
+    // Find nearest infrastructure
+    let nearestInfra: { name: string; distance: number } | null = null;
+    if (lat && lng) {
+      for (const rail of RAILWAY_CORRIDORS) {
+        const distance = haversineDistance(lat, lng, rail.lat, rail.lng);
+        if (!nearestInfra || distance < nearestInfra.distance) {
+          nearestInfra = { name: rail.name, distance };
+        }
+      }
+    }
+
+    // ==================== CLUSTERING ANALYSIS ====================
+    const clusterCount = countNearbyReports(lat, lng, reportData.deviceMetadata?.deviceId);
+    const sameDeviceCount = countSameDeviceReports(reportData.deviceMetadata?.deviceId);
 
     // Store report for clustering
     if (lat && lng) {
@@ -75,12 +118,79 @@ export async function POST(request: NextRequest) {
         deviceId: reportData.deviceMetadata?.deviceId || 'unknown',
         hasAudioSignature: false, // Will be updated after audio analysis
       });
-
-      // Clean old reports
       cleanOldReports();
     }
 
-    // Store media files
+    // ==================== AUDIO/ML ANALYSIS ====================
+    // Analyze audio from the client-side FFT data if available
+    let audioSignature: DroneAudioSignature | null = null;
+    let mlAudioClassification: DroneClassification | null = null;
+    let mlImageClassification: DroneClassification | null = null;
+    
+    // Check if client sent FFT analysis data
+    if (reportData.audioAnalysis) {
+      // Use client-side analysis
+      audioSignature = reportData.audioAnalysis;
+    } else if (reportData.droneSignature) {
+      // Alternative field name
+      audioSignature = reportData.droneSignature;
+    }
+    
+    // Run simulated ML classification based on FFT results
+    if (audioSignature) {
+      mlAudioClassification = simulateAudioClassification(audioSignature);
+      
+      // Update report store with audio signature
+      if (lat && lng) {
+        const existing = recentReports.get(reportId);
+        if (existing) {
+          existing.hasAudioSignature = audioSignature.detected;
+          recentReports.set(reportId, existing);
+        }
+      }
+    }
+    
+    // Simulate image classification based on liveness/motion data
+    const hasMotion = reportData.liveness?.motionDetected || false;
+    const motionIntensity = reportData.liveness?.averageRotation 
+      ? Math.min(1, reportData.liveness.averageRotation / 10) 
+      : 0;
+    mlImageClassification = simulateImageClassification(hasMotion, motionIntensity);
+
+    // ==================== COMBINED RISK ASSESSMENT ====================
+    const riskInput: RiskAssessmentInput = {
+      // Audio analysis
+      audioSignature,
+      mlAudioClassification,
+      mlImageClassification,
+      
+      // Location
+      deviceLatitude: lat,
+      deviceLongitude: lng,
+      groundTruthLatitude: reportData.groundTruth?.latitude,
+      groundTruthLongitude: reportData.groundTruth?.longitude,
+      distanceToInfrastructure: nearestInfra?.distance ?? null,
+      infrastructureName: nearestInfra?.name ?? null,
+      
+      // IP
+      ipAssessment,
+      geoAnomaly,
+      isRateLimited: rateLimit.isRateLimited,
+      
+      // Clustering
+      nearbyReportCount: clusterCount,
+      sameDeviceReportCount: sameDeviceCount,
+      timeWindowMinutes: CLUSTER_TIME_WINDOW_MS / 60000,
+      
+      // Validation
+      livenessConfidence: reportData.liveness?.confidence || 0,
+      hasCompleteMetadata: !!reportData.deviceMetadata?.deviceId,
+      mediaQualityScore: videoFile ? 70 : 30, // Simplified quality check
+    };
+    
+    const riskAssessment: CombinedRiskAssessment = calculateRiskAssessment(riskInput);
+
+    // ==================== STORE FILES ====================
     const storagePath = join(process.cwd(), 'data', 'reports', reportId);
     await mkdir(storagePath, { recursive: true });
 
@@ -94,11 +204,27 @@ export async function POST(request: NextRequest) {
       await writeFile(join(storagePath, 'audio.webm'), audioBuffer);
     }
 
-    // Store metadata
+    // ==================== STORE REPORT ====================
     const fullReport = {
       ...reportData,
-      assessment,
+      audioSignature,
+      mlAudioClassification,
+      mlImageClassification,
+      riskAssessment,
+      ipAnalysis: {
+        ip: ipAssessment.ip,
+        country: ipAssessment.country,
+        riskLevel: ipAssessment.riskLevel,
+        riskScore: ipAssessment.riskScore,
+      },
+      geoAnomaly: geoAnomaly ? {
+        distanceKm: geoAnomaly.distanceKm,
+        isAnomaly: geoAnomaly.isAnomaly,
+      } : null,
+      nearestInfrastructure: nearestInfra,
+      clusterCount,
       timestamp,
+      processingTimeMs: performance.now() - startTime,
       videoPath: videoFile ? `${reportId}/video.webm` : null,
       audioPath: audioFile ? `${reportId}/audio.webm` : null,
     };
@@ -108,20 +234,70 @@ export async function POST(request: NextRequest) {
       JSON.stringify(fullReport, null, 2)
     );
 
-    // If RED alert, trigger immediate notification
-    if (assessment.level === 'RED') {
-      await triggerCriticalAlert(fullReport, assessment);
+    // ==================== ALERTS ====================
+    // If RED or ORANGE alert, trigger immediate notification
+    if (riskAssessment.threatLevel === 'RED') {
+      await triggerCriticalAlert(fullReport, riskAssessment);
+    } else if (riskAssessment.threatLevel === 'ORANGE') {
+      await triggerHighAlert(fullReport, riskAssessment);
     }
 
     // Log for audit
-    console.log(`[REPORT] ${reportId} | Level: ${assessment.level} | Location: ${lat?.toFixed(6)}, ${lng?.toFixed(6)} | Railway: ${assessment.nearestRailway}`);
+    const logDetails = [
+      `Level: ${riskAssessment.threatLevel}`,
+      `Score: ${riskAssessment.totalScore}`,
+      `Confidence: ${riskAssessment.confidence}%`,
+      `Location: ${lat?.toFixed(6)}, ${lng?.toFixed(6)}`,
+      `IP: ${ipAssessment.country || 'unknown'}`,
+      nearestInfra ? `Infra: ${nearestInfra.name} @ ${Math.round(nearestInfra.distance)}m` : null,
+      clusterCount > 0 ? `Cluster: ${clusterCount}` : null,
+    ].filter(Boolean).join(' | ');
+    
+    console.log(`[REPORT] ${reportId} | ${logDetails}`);
+
+    // Map 4-level threat to 3-level for API response (for backwards compatibility)
+    const apiThreatLevel = riskAssessment.threatLevel === 'ORANGE' ? 'YELLOW' : riskAssessment.threatLevel;
 
     return NextResponse.json({
       success: true,
       reportId,
-      threatLevel: assessment.level,
-      message: getResponseMessage(assessment.level),
+      threatLevel: apiThreatLevel,
+      fullThreatLevel: riskAssessment.threatLevel,
+      riskScore: riskAssessment.totalScore,
+      confidence: riskAssessment.confidence,
+      message: getResponseMessage(riskAssessment.threatLevel),
       timestamp,
+      riskFactors: riskAssessment.triggeringFactors.map(f => f.details),
+      requiredActions: riskAssessment.requiredActions,
+      // ML Classification results
+      droneDetection: {
+        audio: mlAudioClassification ? {
+          detected: mlAudioClassification.isDrone,
+          type: mlAudioClassification.droneType,
+          confidence: Math.round((mlAudioClassification.confidence || 0) * 100),
+          threatLevel: mlAudioClassification.threatLevel,
+        } : null,
+        visual: mlImageClassification ? {
+          detected: mlImageClassification.isDrone,
+          type: mlImageClassification.droneType,
+          confidence: Math.round((mlImageClassification.confidence || 0) * 100),
+          threatLevel: mlImageClassification.threatLevel,
+        } : null,
+        fft: audioSignature ? {
+          detected: audioSignature.detected,
+          dominantFrequency: Math.round(audioSignature.dominantFrequency),
+          estimatedType: audioSignature.estimatedType,
+          confidence: audioSignature.confidence,
+        } : null,
+      },
+      // Score breakdown
+      scoreBreakdown: {
+        audio: riskAssessment.audioScore,
+        location: riskAssessment.locationScore,
+        ip: riskAssessment.ipScore,
+        clustering: riskAssessment.clusteringScore,
+        validation: riskAssessment.validationScore,
+      },
     });
 
   } catch (error) {
@@ -244,7 +420,37 @@ function haversineDistance(lat1: number, lng1: number, lat2: number, lng2: numbe
   return R * c;
 }
 
-async function triggerCriticalAlert(report: any, assessment: ThreatAssessment) {
+function getClientIP(request: NextRequest): string {
+  // Try various headers for client IP
+  const forwarded = request.headers.get('x-forwarded-for');
+  if (forwarded) {
+    return forwarded.split(',')[0].trim();
+  }
+  
+  const realIP = request.headers.get('x-real-ip');
+  if (realIP) {
+    return realIP;
+  }
+  
+  // Fallback (may not work in all environments)
+  return '127.0.0.1';
+}
+
+function countSameDeviceReports(deviceId: string | undefined): number {
+  if (!deviceId) return 0;
+  
+  const now = Date.now();
+  let count = 0;
+  
+  for (const [, report] of recentReports) {
+    if (now - report.timestamp > CLUSTER_TIME_WINDOW_MS) continue;
+    if (report.deviceId === deviceId) count++;
+  }
+  
+  return count;
+}
+
+async function triggerCriticalAlert(report: any, assessment: CombinedRiskAssessment) {
   // In production, this would:
   // 1. Send SMS to SOK patrol units
   // 2. Push notification to ABW dashboard
@@ -252,11 +458,15 @@ async function triggerCriticalAlert(report: any, assessment: ThreatAssessment) {
   // 4. Add to real-time monitoring dashboard
 
   console.log('='.repeat(60));
-  console.log('[CRITICAL ALERT] DRONE THREAT DETECTED');
-  console.log(`Railway: ${assessment.nearestRailway}`);
-  console.log(`Distance: ${assessment.distanceToRailway?.toFixed(0)}m`);
-  console.log(`Cluster: ${assessment.clusterCount} reports`);
-  console.log(`Reasons: ${assessment.reasons.join(', ')}`);
+  console.log('[CRITICAL ALERT] RED - DRONE THREAT DETECTED');
+  console.log(`Threat Level: ${assessment.threatLevel} | Score: ${assessment.totalScore}/100`);
+  console.log(`Confidence: ${assessment.confidence}%`);
+  console.log(`Infrastructure: ${report.nearestInfrastructure?.name || 'N/A'} @ ${Math.round(report.nearestInfrastructure?.distance || 0)}m`);
+  console.log(`Cluster: ${report.clusterCount} nearby reports`);
+  console.log(`Triggering Factors:`);
+  assessment.triggeringFactors.forEach(f => console.log(`  - ${f.details}`));
+  console.log(`Required Actions:`);
+  assessment.requiredActions.forEach(a => console.log(`  - ${a}`));
   console.log('='.repeat(60));
 
   // TODO: Implement actual notification channels
@@ -265,10 +475,26 @@ async function triggerCriticalAlert(report: any, assessment: ThreatAssessment) {
   // await emailPKPSecurity(report, assessment);
 }
 
-function getResponseMessage(level: 'GREEN' | 'YELLOW' | 'RED'): string {
+async function triggerHighAlert(report: any, assessment: CombinedRiskAssessment) {
+  // ORANGE level - high priority but not critical
+  console.log('-'.repeat(60));
+  console.log('[HIGH ALERT] ORANGE - Elevated Drone Threat');
+  console.log(`Threat Level: ${assessment.threatLevel} | Score: ${assessment.totalScore}/100`);
+  console.log(`Confidence: ${assessment.confidence}%`);
+  console.log(`Location: ${report.nearestInfrastructure?.name || 'Unknown'}`);
+  console.log(`Factors: ${assessment.triggeringFactors.map(f => f.name).join(', ')}`);
+  console.log('-'.repeat(60));
+  
+  // TODO: Implement notification channels for ORANGE alerts
+  // await notifyDispatcher(report, assessment);
+}
+
+function getResponseMessage(level: ThreatLevel): string {
   switch (level) {
     case 'RED':
       return 'ALERT KRYTYCZNY - Służby ochrony infrastruktury zostały powiadomione. Zachowaj bezpieczną odległość.';
+    case 'ORANGE':
+      return 'ALERT PODWYŻSZONY - Zgłoszenie przekazane do weryfikacji. Służby zostały powiadomione.';
     case 'YELLOW':
       return 'Zgłoszenie zarejestrowane - trwa weryfikacja. Dziękujemy za czujność.';
     default:

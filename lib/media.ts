@@ -35,7 +35,7 @@ export function useMediaCapture(options: UseMediaCaptureOptions = {}) {
     try {
       // First check if getUserMedia is available
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        setError('Camera API not supported');
+        setError('Kamera nie jest obsługiwana przez tę przeglądarkę');
         return false;
       }
 
@@ -218,7 +218,7 @@ export function useMediaCapture(options: UseMediaCaptureOptions = {}) {
   // Start recording
   const startRecording = useCallback(async (): Promise<void> => {
     if (!stream) {
-      throw new Error('Media stream not initialized');
+      throw new Error('Strumień mediów nie został zainicjalizowany');
     }
 
     setIsRecording(true);
@@ -226,17 +226,47 @@ export function useMediaCapture(options: UseMediaCaptureOptions = {}) {
     audioChunksRef.current = [];
     framesRef.current = [];
 
-    // Video recorder (video + audio combined)
-    const videoMimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus')
-      ? 'video/webm;codecs=vp9,opus'
-      : MediaRecorder.isTypeSupported('video/webm')
-      ? 'video/webm'
-      : 'video/mp4';
+    // Detect platform for better MIME type selection
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
 
-    mediaRecorderRef.current = new MediaRecorder(stream, {
-      mimeType: videoMimeType,
+    // Video recorder (video + audio combined)
+    // iOS Safari requires MP4 with proper codec specification
+    let videoMimeType: string;
+    if (isIOS || isSafari) {
+      // Safari/iOS supports mp4 natively
+      videoMimeType = MediaRecorder.isTypeSupported('video/mp4;codecs=avc1,mp4a.40.2')
+        ? 'video/mp4;codecs=avc1,mp4a.40.2'
+        : MediaRecorder.isTypeSupported('video/mp4')
+        ? 'video/mp4'
+        : ''; // Let browser choose default
+    } else {
+      videoMimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus')
+        ? 'video/webm;codecs=vp9,opus'
+        : MediaRecorder.isTypeSupported('video/webm;codecs=vp8,opus')
+        ? 'video/webm;codecs=vp8,opus'
+        : MediaRecorder.isTypeSupported('video/webm')
+        ? 'video/webm'
+        : '';
+    }
+
+    console.log('[Media] Recording with video MIME type:', videoMimeType || 'default');
+
+    const recorderOptions: MediaRecorderOptions = {
       videoBitsPerSecond: 2500000,
-    });
+    };
+    if (videoMimeType) {
+      recorderOptions.mimeType = videoMimeType;
+    }
+
+    try {
+      mediaRecorderRef.current = new MediaRecorder(stream, recorderOptions);
+    } catch (recorderError) {
+      console.warn('[Media] MediaRecorder creation failed with options, trying default:', recorderError);
+      // Fallback: create without options
+      mediaRecorderRef.current = new MediaRecorder(stream);
+    }
 
     mediaRecorderRef.current.ondataavailable = (event) => {
       if (event.data.size > 0) {
@@ -248,14 +278,35 @@ export function useMediaCapture(options: UseMediaCaptureOptions = {}) {
 
     // Separate audio recorder for acoustic analysis
     const audioStream = new MediaStream(stream.getAudioTracks());
-    const audioMimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
-      ? 'audio/webm;codecs=opus'
-      : 'audio/webm';
+    
+    let audioMimeType: string;
+    if (isIOS || isSafari) {
+      audioMimeType = MediaRecorder.isTypeSupported('audio/mp4')
+        ? 'audio/mp4'
+        : '';
+    } else {
+      audioMimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+        ? 'audio/webm;codecs=opus'
+        : MediaRecorder.isTypeSupported('audio/webm')
+        ? 'audio/webm'
+        : '';
+    }
 
-    audioRecorderRef.current = new MediaRecorder(audioStream, {
-      mimeType: audioMimeType,
+    console.log('[Media] Recording with audio MIME type:', audioMimeType || 'default');
+
+    const audioRecorderOptions: MediaRecorderOptions = {
       audioBitsPerSecond: 128000,
-    });
+    };
+    if (audioMimeType) {
+      audioRecorderOptions.mimeType = audioMimeType;
+    }
+
+    try {
+      audioRecorderRef.current = new MediaRecorder(audioStream, audioRecorderOptions);
+    } catch (audioRecorderError) {
+      console.warn('[Media] Audio MediaRecorder creation failed, trying default:', audioRecorderError);
+      audioRecorderRef.current = new MediaRecorder(audioStream);
+    }
 
     audioRecorderRef.current.ondataavailable = (event) => {
       if (event.data.size > 0) {
@@ -367,8 +418,32 @@ export function useMediaCapture(options: UseMediaCaptureOptions = {}) {
   const setVideoElement = useCallback((element: HTMLVideoElement | null) => {
     videoRef.current = element;
     if (element && stream) {
-      element.srcObject = stream;
-      element.play();
+      // Detect iOS
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      
+      // Set srcObject
+      if (element.srcObject !== stream) {
+        element.srcObject = stream;
+        
+        // iOS-specific attributes
+        element.setAttribute('playsinline', 'true');
+        element.setAttribute('webkit-playsinline', 'true');
+        element.setAttribute('autoplay', 'true');
+        element.muted = true;
+        
+        // iOS Safari requires load() before play() in some cases
+        if (isIOS) {
+          element.load();
+        }
+        
+        console.log('[Media] Video element connected to stream');
+        
+        // Start playback
+        element.play().catch((err) => {
+          console.warn('[Media] Video play failed in setVideoElement:', err);
+        });
+      }
     }
   }, [stream]);
 
