@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import {
   useDeviceMotion,
   useDeviceOrientation,
@@ -13,6 +14,16 @@ import {
 } from '@/lib/sensors';
 import { useMediaCapture, useAudioAnalyzer } from '@/lib/media';
 import type { DroneReport, GroundTruth, ReportSubmissionResponse } from '@/lib/types';
+
+// Dynamic import for Map (Leaflet requires client-side only)
+const Map = dynamic(() => import('@/components/Map'), {
+  ssr: false,
+  loading: () => (
+    <div className="absolute inset-0 bg-zinc-900 flex items-center justify-center">
+      <div className="text-gray-400">Loading map...</div>
+    </div>
+  ),
+});
 
 type ReportStage = 'init' | 'permissions' | 'ready' | 'capturing' | 'processing' | 'complete' | 'error';
 
@@ -600,10 +611,40 @@ function ReadyStage({
   groundTruth: GroundTruth | null;
   onCapture: () => void;
 }) {
+  // Keep video element mounted but hidden for recording
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const tryPlay = async () => {
+      try {
+        if (video.srcObject && video.readyState >= 2) {
+          await video.play();
+        }
+      } catch (err) {
+        console.log('[ReadyStage] Video autoplay blocked');
+      }
+    };
+
+    tryPlay();
+    video.addEventListener('canplay', tryPlay);
+    return () => video.removeEventListener('canplay', tryPlay);
+  }, [videoRef]);
+
   return (
     <div className="flex-1 flex flex-col">
-      {/* Video preview */}
-      <div className="relative flex-1 bg-zinc-900">
+      {/* Map view */}
+      <div className="relative flex-1 bg-zinc-900" style={{ minHeight: '50vh' }}>
+        <Map
+          latitude={location?.latitude}
+          longitude={location?.longitude}
+          accuracy={location?.accuracy}
+          groundTruthLat={groundTruth?.latitude}
+          groundTruthLng={groundTruth?.longitude}
+          className="absolute inset-0"
+        />
+
+        {/* Hidden video element for recording */}
         {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
         <video
           ref={videoRef}
@@ -611,19 +652,12 @@ function ReadyStage({
           playsInline
           webkit-playsinline="true"
           muted
-          className="absolute inset-0 w-full h-full object-cover"
+          className="hidden"
         />
-        
-        {/* Crosshair overlay */}
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <div className="w-48 h-48 border-2 border-red-500/50 rounded-full flex items-center justify-center">
-            <div className="w-2 h-2 bg-red-500 rounded-full" />
-          </div>
-        </div>
 
         {/* Compass indicator */}
         {compass !== undefined && (
-          <div className="absolute top-4 right-4 bg-black/70 rounded-lg px-3 py-2 flex items-center gap-2">
+          <div className="absolute top-4 right-4 bg-black/70 rounded-lg px-3 py-2 flex items-center gap-2 z-[1000]">
             <svg className="w-5 h-5 text-red-500" style={{ transform: `rotate(${compass}deg)` }} viewBox="0 0 24 24" fill="currentColor">
               <path d="M12 2L19 21L12 17L5 21L12 2Z" />
             </svg>
@@ -632,7 +666,7 @@ function ReadyStage({
         )}
 
         {/* Location indicator */}
-        <div className="absolute top-4 left-4 bg-black/70 rounded-lg px-3 py-2">
+        <div className="absolute top-4 left-4 bg-black/70 rounded-lg px-3 py-2 z-[1000]">
           <div className="flex items-center gap-2">
             {groundTruth ? (
               <>
@@ -654,7 +688,7 @@ function ReadyStage({
         </div>
 
         {/* Motion indicator */}
-        <div className="absolute bottom-4 left-4 bg-black/70 rounded-lg px-3 py-2">
+        <div className="absolute bottom-4 left-4 bg-black/70 rounded-lg px-3 py-2 z-[1000]">
           <div className="flex items-center gap-2">
             <div className={`w-2 h-2 rounded-full ${motion ? 'bg-green-500' : 'bg-gray-500'}`} />
             <span className="text-xs">Sensors active</span>
