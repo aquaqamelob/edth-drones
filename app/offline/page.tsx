@@ -9,20 +9,20 @@ export default function OfflinePage() {
         </svg>
       </div>
 
-      <h1 className="text-2xl font-bold mb-2">Brak Połączenia</h1>
+      <h1 className="text-2xl font-bold mb-2">No Connection</h1>
       <p className="text-gray-400 mb-6 max-w-xs">
-        Aplikacja wymaga połączenia z internetem do przesyłania zgłoszeń.
+        The application requires an internet connection to submit reports.
       </p>
 
       <p className="text-sm text-gray-600 mb-6">
-        Zgłoszenia wykonane bez połączenia zostaną automatycznie wysłane po przywróceniu internetu.
+        Reports made without a connection will be automatically sent once internet is restored.
       </p>
 
       <button
         onClick={() => window.location.reload()}
         className="px-6 py-3 bg-zinc-800 hover:bg-zinc-700 rounded-lg transition-colors"
       >
-        Odśwież Stronę
+        Refresh Page
       </button>
     </div>
   );

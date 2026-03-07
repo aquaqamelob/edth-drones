@@ -1,7 +1,7 @@
 {
-  "name": "EDTH Sieć Obrony Przed Dronami",
-  "short_name": "ZgłośDrona",
-  "description": "Ochrona Infrastruktury Krytycznej - System Zgłaszania Zagrożeń Dronowych",
+  "name": "EDTH Drone Defense Network",
+  "short_name": "ReportDrone",
+  "description": "Critical Infrastructure Protection - Drone Threat Reporting System",
   "start_url": "/report",
   "display": "standalone",
   "background_color": "#000000",

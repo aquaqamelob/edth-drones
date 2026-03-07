@@ -113,7 +113,7 @@ function openReportDB() {
 self.addEventListener('push', (event) => {
   const data = event.data?.json() || {};
   const options = {
-    body: data.body || 'Nowe zgłoszenie drona',
+    body: data.body || 'New drone report',
     icon: '/icons/icon-192.png',
     badge: '/icons/icon-192.png',
     vibrate: [200, 100, 200],

@@ -208,14 +208,14 @@ export function useGeolocation(enabled: boolean = true) {
     let errorMessage = err.message;
     switch (err.code) {
       case 1: // PERMISSION_DENIED
-        errorMessage = 'Dostęp do lokalizacji odrzucony. Sprawdź ustawienia przeglądarki i systemu.';
+        errorMessage = 'Location access denied. Check your browser and system settings.';
         setPermissionStatus('denied');
         break;
       case 2: // POSITION_UNAVAILABLE
-        errorMessage = 'Lokalizacja niedostępna. Upewnij się, że GPS jest włączony.';
+        errorMessage = 'Location unavailable. Make sure GPS is enabled.';
         break;
       case 3: // TIMEOUT
-        errorMessage = 'Przekroczono czas oczekiwania na lokalizację. Spróbuj ponownie.';
+        errorMessage = 'Location request timed out. Please try again.';
         break;
     }
     
@@ -225,7 +225,7 @@ export function useGeolocation(enabled: boolean = true) {
   const requestPermission = useCallback(async (): Promise<boolean> => {
     // Check for secure context first
     if (typeof window !== 'undefined' && !isSecureContext) {
-      const msg = 'Geolokalizacja wymaga połączenia HTTPS. Otwórz stronę przez https:// lub użyj localhost.';
+      const msg = 'Geolocation requires HTTPS connection. Open the page via https:// or use localhost.';
       console.error('[Geolocation]', msg);
       setError(msg);
       setPermissionStatus('denied');
@@ -234,7 +234,7 @@ export function useGeolocation(enabled: boolean = true) {
 
     if (typeof navigator === 'undefined' || !navigator.geolocation) {
       setPermissionStatus('unavailable');
-      setError('Geolokalizacja nie jest obsługiwana przez tę przeglądarkę.');
+      setError('Geolocation is not supported by this browser.');
       return false;
     }
 
@@ -246,7 +246,7 @@ export function useGeolocation(enabled: boolean = true) {
         
         if (result.state === 'denied') {
           setPermissionStatus('denied');
-          setError('Dostęp do lokalizacji jest zablokowany. Zmień ustawienia w przeglądarce lub systemie.');
+          setError('Location access is blocked. Change settings in your browser or system.');
           return false;
         }
       } catch (e) {

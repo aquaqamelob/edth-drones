@@ -492,13 +492,13 @@ async function triggerHighAlert(report: any, assessment: CombinedRiskAssessment)
 function getResponseMessage(level: ThreatLevel): string {
   switch (level) {
     case 'RED':
-      return 'ALERT KRYTYCZNY - Służby ochrony infrastruktury zostały powiadomione. Zachowaj bezpieczną odległość.';
+      return 'CRITICAL ALERT - Infrastructure protection services have been notified. Maintain a safe distance.';
     case 'ORANGE':
-      return 'ALERT PODWYŻSZONY - Zgłoszenie przekazane do weryfikacji. Służby zostały powiadomione.';
+      return 'ELEVATED ALERT - Report forwarded for verification. Services have been notified.';
     case 'YELLOW':
-      return 'Zgłoszenie zarejestrowane - trwa weryfikacja. Dziękujemy za czujność.';
+      return 'Report registered - verification in progress. Thank you for your vigilance.';
     default:
-      return 'Zgłoszenie przyjęte. Dane zostaną przeanalizowane.';
+      return 'Report received. Data will be analyzed.';
   }
 }
 

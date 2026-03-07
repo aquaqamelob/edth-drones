@@ -8,11 +8,11 @@ export default function Home() {
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center gap-3 mb-2">
             <div className="w-4 h-4 rounded-full bg-red-500 animate-pulse" />
-            <span className="text-red-300 uppercase tracking-wider text-sm font-bold">System Aktywny</span>
+            <span className="text-red-300 uppercase tracking-wider text-sm font-bold">System Active</span>
           </div>
-          <h1 className="text-4xl font-bold mb-2">EDTH Sieć Obronna</h1>
+          <h1 className="text-4xl font-bold mb-2">EDTH Defense Network</h1>
           <p className="text-red-200">
-            Rozproszone Wykrywanie Zagrożeń Dronowych dla Infrastruktury Krytycznej
+            Distributed Drone Threat Detection for Critical Infrastructure
           </p>
         </div>
       </header>
@@ -22,11 +22,11 @@ export default function Home() {
         {/* Mission Statement */}
         <section className="mb-12">
           <div className="bg-zinc-900 rounded-2xl p-6 border border-red-900/30">
-            <h2 className="text-xl font-bold mb-3">Ochrona Infrastruktury Kolejowej</h2>
+            <h2 className="text-xl font-bold mb-3">Railway Infrastructure Protection</h2>
             <p className="text-gray-300">
-              System crowdsourcingowy do wykrywania i raportowania zagrożeń dronowych 
-              wzdłuż korytarzy kolejowych. Dane przekazywane bezpośrednio do SOK, 
-              Policji i ABW.
+              Crowdsourcing system for detecting and reporting drone threats 
+              along railway corridors. Data transmitted directly to SOK, 
+              Police and ABW.
             </p>
           </div>
         </section>
@@ -38,9 +38,9 @@ export default function Home() {
             className="block bg-red-600 hover:bg-red-700 rounded-2xl p-6 transition-colors"
           >
             <div className="text-3xl mb-3">🎯</div>
-            <h3 className="text-xl font-bold mb-2">Zgłoś Drona</h3>
+            <h3 className="text-xl font-bold mb-2">Report a Drone</h3>
             <p className="text-red-200 text-sm">
-              Natychmiastowe zgłoszenie z pełnym zbieraniem danych sensorowych
+              Immediate report with full sensor data collection
             </p>
           </Link>
 
@@ -49,9 +49,9 @@ export default function Home() {
             className="block bg-zinc-800 hover:bg-zinc-700 rounded-2xl p-6 transition-colors"
           >
             <div className="text-3xl mb-3">📱</div>
-            <h3 className="text-xl font-bold mb-2">Generator QR</h3>
+            <h3 className="text-xl font-bold mb-2">QR Generator</h3>
             <p className="text-gray-400 text-sm">
-              Generuj kody QR z geolokalizacją do naklejek wzdłuż torów
+              Generate QR codes with geolocation for stickers along railways
             </p>
           </Link>
 
@@ -60,9 +60,9 @@ export default function Home() {
             className="block bg-zinc-800 hover:bg-zinc-700 rounded-2xl p-6 transition-colors"
           >
             <div className="text-3xl mb-3">🖥️</div>
-            <h3 className="text-xl font-bold mb-2">Panel Dyspozytora</h3>
+            <h3 className="text-xl font-bold mb-2">Dispatcher Panel</h3>
             <p className="text-gray-400 text-sm">
-              Dashboard dla służb - klastering zgłoszeń i przekazywanie alertów
+              Dashboard for services - report clustering and alert forwarding
             </p>
           </Link>
 
@@ -71,25 +71,25 @@ export default function Home() {
             className="block bg-zinc-800 hover:bg-zinc-700 rounded-2xl p-6 transition-colors"
           >
             <div className="text-3xl mb-3">🧪</div>
-            <h3 className="text-xl font-bold mb-2">Test Sensorów</h3>
+            <h3 className="text-xl font-bold mb-2">Sensor Test</h3>
             <p className="text-gray-400 text-sm">
-              Sprawdź dostępność i działanie czujników urządzenia
+              Check availability and operation of device sensors
             </p>
           </Link>
         </section>
 
         {/* How It Works */}
         <section className="mb-12">
-          <h2 className="text-2xl font-bold mb-6">Jak Działa System</h2>
+          <h2 className="text-2xl font-bold mb-6">How the System Works</h2>
           
           <div className="space-y-4">
             <div className="flex gap-4 items-start">
               <div className="w-10 h-10 rounded-full bg-red-900 flex items-center justify-center flex-shrink-0 font-bold">1</div>
               <div>
-                <h3 className="font-bold">Skanuj Kod QR</h3>
+                <h3 className="font-bold">Scan QR Code</h3>
                 <p className="text-sm text-gray-400">
-                  Kody QR na słupach zawierają dokładną lokalizację GPS (Ground Truth), 
-                  eliminując niepewność pozycji telefonu.
+                  QR codes on poles contain exact GPS location (Ground Truth), 
+                  eliminating phone position uncertainty.
                 </p>
               </div>
             </div>
@@ -97,10 +97,10 @@ export default function Home() {
             <div className="flex gap-4 items-start">
               <div className="w-10 h-10 rounded-full bg-red-900 flex items-center justify-center flex-shrink-0 font-bold">2</div>
               <div>
-                <h3 className="font-bold">Nagraj 5-sekundowy Klip</h3>
+                <h3 className="font-bold">Record 5-Second Clip</h3>
                 <p className="text-sm text-gray-400">
-                  System zbiera: wideo, audio (do analizy FFT), kierunek kompasu, 
-                  dane żyroskopu i akcelerometru, lokalizację GPS.
+                  System collects: video, audio (for FFT analysis), compass direction, 
+                  gyroscope and accelerometer data, GPS location.
                 </p>
               </div>
             </div>
@@ -108,10 +108,10 @@ export default function Home() {
             <div className="flex gap-4 items-start">
               <div className="w-10 h-10 rounded-full bg-red-900 flex items-center justify-center flex-shrink-0 font-bold">3</div>
               <div>
-                <h3 className="font-bold">Walidacja Liveness</h3>
+                <h3 className="font-bold">Liveness Validation</h3>
                 <p className="text-sm text-gray-400">
-                  Analiza ruchu telefonu wykrywa fałszywe zgłoszenia (statyw, 
-                  automatyczne zgłoszenia). Prawdziwa ludzka ręka nie jest nigdy idealnie stabilna.
+                  Phone motion analysis detects fake reports (tripod, 
+                  automated reports). Real human hand is never perfectly stable.
                 </p>
               </div>
             </div>
@@ -119,10 +119,10 @@ export default function Home() {
             <div className="flex gap-4 items-start">
               <div className="w-10 h-10 rounded-full bg-red-900 flex items-center justify-center flex-shrink-0 font-bold">4</div>
               <div>
-                <h3 className="font-bold">Klastering i Triangulacja</h3>
+                <h3 className="font-bold">Clustering and Triangulation</h3>
                 <p className="text-sm text-gray-400">
-                  Wiele zgłoszeń z tego samego obszaru łączy się w jedno zdarzenie. 
-                  Kierunki z różnych pozycji pozwalają na triangulację pozycji drona.
+                  Multiple reports from the same area combine into one event. 
+                  Directions from different positions allow triangulation of drone position.
                 </p>
               </div>
             </div>
@@ -130,10 +130,10 @@ export default function Home() {
             <div className="flex gap-4 items-start">
               <div className="w-10 h-10 rounded-full bg-red-900 flex items-center justify-center flex-shrink-0 font-bold">5</div>
               <div>
-                <h3 className="font-bold">Automatyczna Eskalacja</h3>
+                <h3 className="font-bold">Automatic Escalation</h3>
                 <p className="text-sm text-gray-400">
                   <span className="text-green-400">GREEN</span> = log / 
-                  <span className="text-yellow-400"> YELLOW</span> = Straż Miejska / 
+                  <span className="text-yellow-400"> YELLOW</span> = City Guard / 
                   <span className="text-red-400"> RED</span> = SOK + ABW
                 </p>
               </div>
@@ -143,46 +143,46 @@ export default function Home() {
 
         {/* Technical Specs */}
         <section className="bg-zinc-900 rounded-2xl p-6">
-          <h2 className="text-xl font-bold mb-4">Zbierane Dane</h2>
+          <h2 className="text-xl font-bold mb-4">Collected Data</h2>
           
           <div className="grid md:grid-cols-2 gap-4 text-sm">
             <div>
               <h3 className="font-bold text-red-400 mb-2">Media</h3>
               <ul className="space-y-1 text-gray-400">
-                <li>• Wideo 5s (back camera, 1080p)</li>
-                <li>• Audio 48kHz (bez redukcji szumów)</li>
-                <li>• Klatki co 500ms (JPEG)</li>
-                <li>• Miniatura pierwszej klatki</li>
+                <li>• Video 5s (back camera, 1080p)</li>
+                <li>• Audio 48kHz (no noise reduction)</li>
+                <li>• Frames every 500ms (JPEG)</li>
+                <li>• First frame thumbnail</li>
               </ul>
             </div>
             
             <div>
-              <h3 className="font-bold text-red-400 mb-2">Sensory</h3>
+              <h3 className="font-bold text-red-400 mb-2">Sensors</h3>
               <ul className="space-y-1 text-gray-400">
-                <li>• Żyroskop (rotationRate α/β/γ)</li>
-                <li>• Akcelerometr (z i bez grawitacji)</li>
-                <li>• Magnetometr (kompas)</li>
-                <li>• GPS (ciągłe śledzenie)</li>
+                <li>• Gyroscope (rotationRate α/β/γ)</li>
+                <li>• Accelerometer (with and without gravity)</li>
+                <li>• Magnetometer (compass)</li>
+                <li>• GPS (continuous tracking)</li>
               </ul>
             </div>
             
             <div>
-              <h3 className="font-bold text-red-400 mb-2">Metadane Urządzenia</h3>
+              <h3 className="font-bold text-red-400 mb-2">Device Metadata</h3>
               <ul className="space-y-1 text-gray-400">
-                <li>• User Agent, platforma</li>
-                <li>• Rozdzielczość ekranu</li>
-                <li>• Typ i jakość połączenia</li>
-                <li>• Poziom baterii</li>
+                <li>• User Agent, platform</li>
+                <li>• Screen resolution</li>
+                <li>• Connection type and quality</li>
+                <li>• Battery level</li>
               </ul>
             </div>
             
             <div>
-              <h3 className="font-bold text-red-400 mb-2">Walidacja</h3>
+              <h3 className="font-bold text-red-400 mb-2">Validation</h3>
               <ul className="space-y-1 text-gray-400">
-                <li>• Liveness check (ruch telefonu)</li>
-                <li>• Sygnatura audio drona (FFT)</li>
-                <li>• Unikalny ID urządzenia</li>
-                <li>• ID sesji zgłoszenia</li>
+                <li>• Liveness check (phone motion)</li>
+                <li>• Drone audio signature (FFT)</li>
+                <li>• Unique device ID</li>
+                <li>• Report session ID</li>
               </ul>
             </div>
           </div>
@@ -190,8 +190,8 @@ export default function Home() {
 
         {/* Footer */}
         <footer className="mt-12 pt-6 border-t border-zinc-800 text-center text-sm text-gray-600">
-          <p>EDTH Sieć Obrony Przed Dronami v1.0</p>
-          <p className="mt-1">System Ochrony Infrastruktury Krytycznej</p>
+          <p>EDTH Drone Defense Network v1.0</p>
+          <p className="mt-1">Critical Infrastructure Protection System</p>
         </footer>
       </main>
     </div>

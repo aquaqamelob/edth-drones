@@ -97,14 +97,14 @@ export default function TestPage() {
   return (
     <div className="min-h-screen bg-zinc-950 text-white p-6">
       <header className="max-w-2xl mx-auto mb-8">
-        <h1 className="text-2xl font-bold text-red-500 mb-2">Test Sensorów</h1>
+        <h1 className="text-2xl font-bold text-red-500 mb-2">Sensor Test</h1>
         <p className="text-gray-400">
-          Sprawdź dostępność i działanie wszystkich czujników urządzenia
+          Check availability and operation of all device sensors
         </p>
         {isIOS && (
           <div className="mt-3 bg-blue-900/30 border border-blue-700 rounded-lg px-4 py-2">
             <p className="text-blue-300 text-sm">
-              📱 Wykryto iOS - czujniki ruchu wymagają osobnego zezwolenia
+              📱 iOS detected - motion sensors require separate permission
             </p>
           </div>
         )}
@@ -121,16 +121,16 @@ export default function TestPage() {
               {isRequesting ? (
                 <>
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  <span>Żądanie uprawnień...</span>
+                  <span>Requesting permissions...</span>
                 </>
               ) : (
-                'Rozpocznij Test Sensorów'
+                'Start Sensor Test'
               )}
             </button>
             
             {isIOS && (
               <p className="text-sm text-gray-500 text-center">
-                Po naciśnięciu przycisku pojawią się okna z prośbą o dostęp do czujników.
+                After pressing the button, permission dialogs will appear.
               </p>
             )}
           </div>
@@ -138,23 +138,23 @@ export default function TestPage() {
           <>
             {/* Permissions Status */}
             <div className="bg-zinc-900 rounded-xl p-6">
-              <h2 className="text-lg font-bold mb-4">Status Uprawnień</h2>
+              <h2 className="text-lg font-bold mb-4">Permissions Status</h2>
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex items-center gap-3">
                   <span className="text-2xl">{statusIcon(cameraStatus)}</span>
-                  <span>Kamera</span>
+                  <span>Camera</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="text-2xl">{statusIcon(micStatus)}</span>
-                  <span>Mikrofon</span>
+                  <span>Microphone</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="text-2xl">{statusIcon(geoStatus)}</span>
-                  <span>Lokalizacja</span>
+                  <span>Location</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="text-2xl">{statusIcon(motionStatus)}</span>
-                  <span>Ruch/Orientacja</span>
+                  <span>Motion/Orientation</span>
                 </div>
               </div>
             </div>
@@ -162,14 +162,14 @@ export default function TestPage() {
             {/* Motion Data */}
             <div className="bg-zinc-900 rounded-xl p-6">
               <h2 className="text-lg font-bold mb-4">
-                Żyroskop / Akcelerometr
-                <span className="text-sm text-gray-400 ml-2">({motionHistory.length} próbek)</span>
+                Gyroscope / Accelerometer
+                <span className="text-sm text-gray-400 ml-2">({motionHistory.length} samples)</span>
               </h2>
               
               {motion ? (
                 <div className="space-y-4 font-mono text-sm">
                   <div>
-                    <h3 className="text-gray-400 mb-1">Prędkość obrotu (°/s)</h3>
+                    <h3 className="text-gray-400 mb-1">Rotation rate (°/s)</h3>
                     <div className="grid grid-cols-3 gap-2">
                       <div className="bg-zinc-800 rounded p-2">
                         <span className="text-gray-500">α</span>{' '}
@@ -187,7 +187,7 @@ export default function TestPage() {
                   </div>
 
                   <div>
-                    <h3 className="text-gray-400 mb-1">Przyspieszenie (m/s²)</h3>
+                    <h3 className="text-gray-400 mb-1">Acceleration (m/s²)</h3>
                     <div className="grid grid-cols-3 gap-2">
                       <div className="bg-zinc-800 rounded p-2">
                         <span className="text-gray-500">x</span>{' '}
@@ -205,13 +205,13 @@ export default function TestPage() {
                   </div>
                 </div>
               ) : (
-                <p className="text-gray-500">Czekam na dane...</p>
+                <p className="text-gray-500">Waiting for data...</p>
               )}
             </div>
 
             {/* Orientation / Compass */}
             <div className="bg-zinc-900 rounded-xl p-6">
-              <h2 className="text-lg font-bold mb-4">Kompas / Orientacja</h2>
+              <h2 className="text-lg font-bold mb-4">Compass / Orientation</h2>
               
               {orientation ? (
                 <div className="space-y-4">
@@ -248,67 +248,67 @@ export default function TestPage() {
                   </div>
                 </div>
               ) : (
-                <p className="text-gray-500">Czekam na dane...</p>
+                <p className="text-gray-500">Waiting for data...</p>
               )}
             </div>
 
             {/* Location */}
             <div className="bg-zinc-900 rounded-xl p-6">
-              <h2 className="text-lg font-bold mb-4">Lokalizacja GPS</h2>
+              <h2 className="text-lg font-bold mb-4">GPS Location</h2>
               
               {location ? (
                 <div className="space-y-2 font-mono text-sm">
                   <div className="flex justify-between">
-                    <span className="text-gray-400">Szerokość:</span>
+                    <span className="text-gray-400">Latitude:</span>
                     <span>{location.latitude.toFixed(6)}°</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-400">Długość:</span>
+                    <span className="text-gray-400">Longitude:</span>
                     <span>{location.longitude.toFixed(6)}°</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-400">Dokładność:</span>
+                    <span className="text-gray-400">Accuracy:</span>
                     <span>±{location.accuracy.toFixed(0)}m</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-400">Wysokość:</span>
+                    <span className="text-gray-400">Altitude:</span>
                     <span>{location.altitude?.toFixed(1) || '—'}m</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-400">Prędkość:</span>
+                    <span className="text-gray-400">Speed:</span>
                     <span>{location.speed?.toFixed(1) || '—'} m/s</span>
                   </div>
                 </div>
               ) : geoError ? (
                 <p className="text-red-400">{geoError}</p>
               ) : (
-                <p className="text-gray-500">Czekam na GPS...</p>
+                <p className="text-gray-500">Waiting for GPS...</p>
               )}
             </div>
 
             {/* Device Metadata */}
             <div className="bg-zinc-900 rounded-xl p-6">
-              <h2 className="text-lg font-bold mb-4">Metadane Urządzenia</h2>
+              <h2 className="text-lg font-bold mb-4">Device Metadata</h2>
               
               <div className="space-y-2 font-mono text-xs">
                 <div className="flex justify-between">
-                  <span className="text-gray-400">ID urządzenia:</span>
+                  <span className="text-gray-400">Device ID:</span>
                   <span className="truncate max-w-[200px]">{deviceMetadata.deviceId}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-400">Platforma:</span>
+                  <span className="text-gray-400">Platform:</span>
                   <span>{deviceMetadata.platform}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-400">Ekran:</span>
+                  <span className="text-gray-400">Screen:</span>
                   <span>{deviceMetadata.screenWidth}x{deviceMetadata.screenHeight} @{deviceMetadata.pixelRatio}x</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-400">Połączenie:</span>
+                  <span className="text-gray-400">Connection:</span>
                   <span>{deviceMetadata.connectionEffectiveType || deviceMetadata.connectionType || '—'}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-400">Bateria:</span>
+                  <span className="text-gray-400">Battery:</span>
                   <span>
                     {deviceMetadata.batteryLevel !== null 
                       ? `${Math.round(deviceMetadata.batteryLevel * 100)}%${deviceMetadata.batteryCharging ? ' ⚡' : ''}`
@@ -316,11 +316,11 @@ export default function TestPage() {
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-400">Język:</span>
+                  <span className="text-gray-400">Language:</span>
                   <span>{deviceMetadata.language}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-400">Strefa czasowa:</span>
+                  <span className="text-gray-400">Timezone:</span>
                   <span>{deviceMetadata.timezone}</span>
                 </div>
               </div>
@@ -328,11 +328,11 @@ export default function TestPage() {
 
             {/* Liveness Check Demo */}
             <div className="bg-zinc-900 rounded-xl p-6">
-              <h2 className="text-lg font-bold mb-4">Sprawdzenie Aktywności</h2>
+              <h2 className="text-lg font-bold mb-4">Liveness Check</h2>
               
               <div className="space-y-2">
                 <div className="flex justify-between">
-                  <span className="text-gray-400">Próbki ruchu:</span>
+                  <span className="text-gray-400">Motion samples:</span>
                   <span className={motionHistory.length >= 10 ? 'text-green-400' : 'text-yellow-400'}>
                     {motionHistory.length} / 10 min
                   </span>
@@ -341,7 +341,7 @@ export default function TestPage() {
                 {motionHistory.length >= 10 && (
                   <>
                     <div className="flex justify-between">
-                      <span className="text-gray-400">Śr. obrotu:</span>
+                      <span className="text-gray-400">Avg. rotation:</span>
                       <span>
                         {(motionHistory.reduce((sum, m) => 
                           sum + Math.abs(m.rotationRate.alpha || 0) + Math.abs(m.rotationRate.beta || 0) + Math.abs(m.rotationRate.gamma || 0)
@@ -355,9 +355,9 @@ export default function TestPage() {
                         Math.abs(m.rotationRate.beta || 0) > 0.1 ||
                         Math.abs(m.rotationRate.gamma || 0) > 0.1
                       ) ? (
-                        <span className="text-green-400">✓ Ludzki ruch wykryty</span>
+                        <span className="text-green-400">✓ Human motion detected</span>
                       ) : (
-                        <span className="text-red-400">⚠ Zbyt stabilne - podejrzane</span>
+                        <span className="text-red-400">⚠ Too stable - suspicious</span>
                       )}
                     </div>
                   </>

@@ -14,13 +14,13 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "EDTH Sieć Obrony Przed Dronami",
-  description: "Ochrona Infrastruktury Krytycznej - System Zgłaszania Zagrożeń Dronowych wzdłuż Korytarzy Kolejowych",
+  title: "EDTH Drone Defense Network",
+  description: "Critical Infrastructure Protection - Drone Threat Reporting System along Railway Corridors",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "ZgłośDrona",
+    title: "ReportDrone",
   },
   formatDetection: {
     telephone: false,

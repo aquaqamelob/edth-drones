@@ -35,7 +35,7 @@ export function useMediaCapture(options: UseMediaCaptureOptions = {}) {
     try {
       // First check if getUserMedia is available
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        setError('Kamera nie jest obsługiwana przez tę przeglądarkę');
+        setError('Camera is not supported by this browser');
         return false;
       }
 
@@ -52,7 +52,7 @@ export function useMediaCapture(options: UseMediaCaptureOptions = {}) {
           console.log('[Media] iOS camera permission status:', cameraPermission.state);
           
           if (cameraPermission.state === 'denied') {
-            setError('Dostęp do kamery zablokowany. Przejdź do Ustawienia → Safari → Kamera i zezwól na dostęp.');
+            setError('Camera access blocked. Go to Settings → Safari → Camera and allow access.');
             return false;
           }
         } catch (permErr) {
@@ -100,15 +100,15 @@ export function useMediaCapture(options: UseMediaCaptureOptions = {}) {
         // Handle specific iOS errors
         if (firstError?.name === 'NotAllowedError') {
           if (isIOS) {
-            setError('Dostęp do kamery zablokowany. Przejdź do Ustawienia → Safari → Kamera i zmień na "Zezwól" lub "Pytaj".');
+            setError('Camera access blocked. Go to Settings → Safari → Camera and change to "Allow" or "Ask".');
           } else {
-            setError('Dostęp do kamery zablokowany. Zezwól na dostęp w ustawieniach przeglądarki.');
+            setError('Camera access blocked. Allow access in browser settings.');
           }
           return false;
         }
         
         if (firstError?.name === 'NotFoundError') {
-          setError('Nie znaleziono kamery. Upewnij się, że urządzenie ma kamerę.');
+          setError('Camera not found. Make sure your device has a camera.');
           return false;
         }
         
@@ -131,12 +131,12 @@ export function useMediaCapture(options: UseMediaCaptureOptions = {}) {
           
           if (fallbackError?.name === 'NotAllowedError') {
             if (isIOS) {
-              setError('Dostęp do kamery zablokowany. Przejdź do Ustawienia → Safari → Kamera i zmień na "Zezwól".');
+              setError('Camera access blocked. Go to Settings → Safari → Camera and change to "Allow".');
             } else {
-              setError('Dostęp do kamery zablokowany.');
+              setError('Camera access blocked.');
             }
           } else {
-            setError(fallbackError?.message || 'Nie można uzyskać dostępu do kamery');
+            setError(fallbackError?.message || 'Cannot access camera');
           }
           return false;
         }
@@ -178,18 +178,18 @@ export function useMediaCapture(options: UseMediaCaptureOptions = {}) {
       
       if (err?.name === 'NotAllowedError' || err?.name === 'PermissionDeniedError') {
         message = isIOS 
-          ? 'Dostęp do kamery zablokowany. Przejdź do Ustawienia iPhone → Safari → Kamera i zezwól na dostęp.'
-          : 'Dostęp do kamery zablokowany. Zezwól na dostęp i odśwież stronę.';
+          ? 'Camera access blocked. Go to iPhone Settings → Safari → Camera and allow access.'
+          : 'Camera access blocked. Allow access and refresh the page.';
       } else if (err?.name === 'NotFoundError' || err?.name === 'DevicesNotFoundError') {
-        message = 'Nie znaleziono kamery.';
+        message = 'Camera not found.';
       } else if (err?.name === 'NotReadableError' || err?.name === 'TrackStartError') {
-        message = 'Kamera jest używana przez inną aplikację. Zamknij inne aplikacje i spróbuj ponownie.';
+        message = 'Camera is being used by another application. Close other apps and try again.';
       } else if (err?.name === 'OverconstrainedError') {
-        message = 'Żądana konfiguracja kamery nie jest obsługiwana.';
+        message = 'Requested camera configuration is not supported.';
       } else if (err?.name === 'SecurityError') {
-        message = 'Dostęp do kamery wymaga połączenia HTTPS.';
+        message = 'Camera access requires HTTPS connection.';
       } else {
-        message = err?.message || 'Nie można uzyskać dostępu do kamery/mikrofonu';
+        message = err?.message || 'Cannot access camera/microphone';
       }
       
       setError(message);
@@ -218,7 +218,7 @@ export function useMediaCapture(options: UseMediaCaptureOptions = {}) {
   // Start recording
   const startRecording = useCallback(async (): Promise<void> => {
     if (!stream) {
-      throw new Error('Strumień mediów nie został zainicjalizowany');
+      throw new Error('Media stream not initialized');
     }
 
     setIsRecording(true);

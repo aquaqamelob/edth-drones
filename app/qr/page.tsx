@@ -33,12 +33,12 @@ export default function QRGeneratorPage() {
     const lng = parseFloat(newLng);
     
     if (isNaN(lat) || isNaN(lng)) {
-      alert('Nieprawidłowe współrzędne');
+      alert('Invalid coordinates');
       return;
     }
 
     if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
-      alert('Współrzędne poza zakresem');
+      alert('Coordinates out of range');
       return;
     }
 
@@ -46,7 +46,7 @@ export default function QRGeneratorPage() {
       lat,
       lng,
       qrId: generateQRId(),
-      name: newName || `Punkt ${prev.length + 1}`,
+      name: newName || `Point ${prev.length + 1}`,
     }]);
 
     setNewLat('');
@@ -66,7 +66,7 @@ export default function QRGeneratorPage() {
 
       const lat = parseFloat(parts[0]);
       const lng = parseFloat(parts[1]);
-      const name = parts[2] || `Punkt ${locations.length + newLocations.length + 1}`;
+      const name = parts[2] || `Point ${locations.length + newLocations.length + 1}`;
 
       if (!isNaN(lat) && !isNaN(lng)) {
         newLocations.push({
@@ -102,7 +102,7 @@ export default function QRGeneratorPage() {
 <html>
 <head>
   <meta charset="utf-8">
-  <title>EDTH Sieć Obronna - Kody QR</title>
+  <title>EDTH Defense Network - QR Codes</title>
   <style>
     body { font-family: Arial, sans-serif; }
     .qr-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; padding: 20px; }
@@ -115,14 +115,14 @@ export default function QRGeneratorPage() {
   </style>
 </head>
 <body>
-  <h1 style="text-align: center; color: #dc2626;">EDTH Sieć Obrony Przed Dronami - Kody QR</h1>
+  <h1 style="text-align: center; color: #dc2626;">EDTH Drone Defense Network - QR Codes</h1>
   <div class="qr-grid">
     ${locations.map(loc => `
       <div class="qr-item">
-        <img src="${getQRImageUrl(getReportUrl(loc))}" alt="Kod QR">
+        <img src="${getQRImageUrl(getReportUrl(loc))}" alt="QR Code">
         <div class="qr-title">${loc.name}</div>
         <div class="qr-coords">${loc.lat.toFixed(6)}, ${loc.lng.toFixed(6)}</div>
-        <div class="qr-label">ZGŁOŚ DRONA</div>
+        <div class="qr-label">REPORT DRONE</div>
       </div>
     `).join('')}
   </div>
@@ -159,9 +159,9 @@ export default function QRGeneratorPage() {
   return (
     <div className="min-h-screen bg-zinc-950 text-white p-6">
       <header className="max-w-6xl mx-auto mb-8">
-        <h1 className="text-3xl font-bold text-red-500 mb-2">Generator Kodów QR</h1>
+        <h1 className="text-3xl font-bold text-red-500 mb-2">QR Code Generator</h1>
         <p className="text-gray-400">
-          Generuj kody QR z zakodowaną lokalizacją do umieszczenia wzdłuż infrastruktury kolejowej
+          Generate QR codes with encoded location for placement along railway infrastructure
         </p>
       </header>
 
@@ -170,12 +170,12 @@ export default function QRGeneratorPage() {
         <div className="space-y-6">
           {/* Single Location */}
           <div className="bg-zinc-900 rounded-xl p-6">
-            <h2 className="text-lg font-bold mb-4">Dodaj Pojedynczy Punkt</h2>
+            <h2 className="text-lg font-bold mb-4">Add Single Point</h2>
             
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm text-gray-400 mb-1">Szerokość (lat)</label>
+                  <label className="block text-sm text-gray-400 mb-1">Latitude (lat)</label>
                   <input
                     type="text"
                     value={newLat}
@@ -185,7 +185,7 @@ export default function QRGeneratorPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm text-gray-400 mb-1">Długość (lng)</label>
+                  <label className="block text-sm text-gray-400 mb-1">Longitude (lng)</label>
                   <input
                     type="text"
                     value={newLng}
@@ -197,12 +197,12 @@ export default function QRGeneratorPage() {
               </div>
               
               <div>
-                <label className="block text-sm text-gray-400 mb-1">Nazwa punktu (opcjonalna)</label>
+                <label className="block text-sm text-gray-400 mb-1">Point name (optional)</label>
                 <input
                   type="text"
                   value={newName}
                   onChange={(e) => setNewName(e.target.value)}
-                  placeholder="KM 12.5 - Słup 47"
+                  placeholder="KM 12.5 - Pole 47"
                   className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-2 focus:border-red-500 focus:outline-none"
                 />
               </div>
@@ -211,22 +211,22 @@ export default function QRGeneratorPage() {
                 onClick={addLocation}
                 className="w-full py-3 bg-red-600 hover:bg-red-700 rounded-lg font-bold transition-colors"
               >
-                Dodaj Punkt
+                Add Point
               </button>
             </div>
           </div>
 
           {/* Bulk Import */}
           <div className="bg-zinc-900 rounded-xl p-6">
-            <h2 className="text-lg font-bold mb-4">Import Zbiorczy (CSV)</h2>
+            <h2 className="text-lg font-bold mb-4">Bulk Import (CSV)</h2>
             <p className="text-sm text-gray-400 mb-3">
-              Format: szerokość,długość,nazwa (każdy punkt w nowej linii)
+              Format: latitude,longitude,name (each point on a new line)
             </p>
             
             <textarea
               value={bulkInput}
               onChange={(e) => setBulkInput(e.target.value)}
-              placeholder="52.2297,21.0122,Punkt A&#10;52.2305,21.0150,Punkt B&#10;52.2280,21.0095,Punkt C"
+              placeholder="52.2297,21.0122,Point A&#10;52.2305,21.0150,Point B&#10;52.2280,21.0095,Point C"
               rows={6}
               className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-2 focus:border-red-500 focus:outline-none font-mono text-sm"
             />
@@ -235,14 +235,14 @@ export default function QRGeneratorPage() {
               onClick={addBulkLocations}
               className="w-full mt-3 py-3 bg-zinc-700 hover:bg-zinc-600 rounded-lg font-bold transition-colors"
             >
-              Importuj Punkty
+              Import Points
             </button>
           </div>
 
           {/* Base URL Config */}
           <div className="bg-zinc-900 rounded-xl p-6">
-            <h2 className="text-lg font-bold mb-4">Konfiguracja URL</h2>
-            <label className="block text-sm text-gray-400 mb-1">Bazowy URL aplikacji</label>
+            <h2 className="text-lg font-bold mb-4">URL Configuration</h2>
+            <label className="block text-sm text-gray-400 mb-1">Base application URL</label>
             <input
               type="text"
               value={baseUrl}
@@ -261,13 +261,13 @@ export default function QRGeneratorPage() {
                 onClick={downloadAllQRCodes}
                 className="flex-1 py-3 bg-red-600 hover:bg-red-700 rounded-lg font-bold transition-colors"
               >
-                📥 Pobierz Wszystkie QR (HTML)
+                📥 Download All QR (HTML)
               </button>
               <button
                 onClick={exportCSV}
                 className="flex-1 py-3 bg-zinc-700 hover:bg-zinc-600 rounded-lg font-bold transition-colors"
               >
-                📄 Eksport CSV
+                📄 Export CSV
               </button>
             </div>
           )}
@@ -277,7 +277,7 @@ export default function QRGeneratorPage() {
             {locations.length === 0 ? (
               <div className="bg-zinc-900 rounded-xl p-12 text-center">
                 <div className="text-6xl mb-4">📍</div>
-                <p className="text-gray-400">Dodaj punkty, aby wygenerować kody QR</p>
+                <p className="text-gray-400">Add points to generate QR codes</p>
               </div>
             ) : (
               locations.map((loc) => (
@@ -341,14 +341,14 @@ function QRCodePreview({
             onClick={() => navigator.clipboard.writeText(url)}
             className="text-xs px-3 py-1 bg-zinc-800 hover:bg-zinc-700 rounded transition-colors"
           >
-            📋 Kopiuj URL
+            📋 Copy URL
           </button>
           <a
             href={qrImageUrl}
             download={`qr-${location.qrId}.png`}
             className="text-xs px-3 py-1 bg-zinc-800 hover:bg-zinc-700 rounded transition-colors"
           >
-            📥 Pobierz PNG
+            📥 Download PNG
           </a>
         </div>
       </div>

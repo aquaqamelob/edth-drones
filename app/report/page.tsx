@@ -20,7 +20,7 @@ export default function ReportPage() {
   return (
     <Suspense fallback={
       <div className="min-h-screen bg-black text-white flex items-center justify-center">
-        <div className="animate-pulse">Ładowanie...</div>
+        <div className="animate-pulse">Loading...</div>
       </div>
     }>
       <ReportPageContent />
@@ -157,7 +157,7 @@ function ReportPageContent() {
       // Initialize camera/mic
       const mediaGranted = await initializeMedia();
       if (!mediaGranted) {
-        setError(mediaError || 'Dostęp do kamery lub mikrofonu zablokowany');
+        setError(mediaError || 'Camera or microphone access blocked');
         setStage('error');
         return;
       }
@@ -167,7 +167,7 @@ function ReportPageContent() {
 
       setStage('ready');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Nie udało się zainicjalizować czujników');
+      setError(err instanceof Error ? err.message : 'Failed to initialize sensors');
       setStage('error');
     }
   }, [requestMotion, requestOrientation, requestGeo, initializeMedia, initializeAnalyzer]);
@@ -228,7 +228,7 @@ function ReportPageContent() {
 
     } catch (err) {
       clearInterval(progressInterval);
-      setError(err instanceof Error ? err.message : 'Przechwytywanie nie powiodło się');
+      setError(err instanceof Error ? err.message : 'Capture failed');
       setStage('error');
     }
   }, [
@@ -285,7 +285,7 @@ function ReportPageContent() {
           success: true,
           reportId: report.id,
           threatLevel: 'YELLOW',
-          message: 'Zgłoszenie zapisane - zostanie wysłane gdy połączenie będzie dostępne',
+          message: 'Report saved - will be sent when connection is available',
           timestamp: new Date().toISOString(),
         });
         setStage('complete');
@@ -447,7 +447,7 @@ function PermissionsStage({
       // On iOS, we need to request motion/orientation permissions first
       // as they require direct user interaction
       if (isIOS) {
-        setCurrentStep('Żądanie dostępu do czujników ruchu...');
+        setCurrentStep('Requesting motion sensor access...');
         
         // Request DeviceMotion permission
         if (typeof (DeviceMotionEvent as any).requestPermission === 'function') {
@@ -475,14 +475,14 @@ function PermissionsStage({
         
         // iOS camera permission - must be requested from user gesture
         // We'll show a step indicator before requesting camera
-        setCurrentStep('Żądanie dostępu do kamery...');
+        setCurrentStep('Requesting camera access...');
         
         // Small delay to ensure UI updates before permission dialog
         await new Promise(resolve => setTimeout(resolve, 100));
       }
       
       // After iOS-specific permissions, call the main handler
-      setCurrentStep('Inicjalizacja kamery i mikrofonu...');
+      setCurrentStep('Initializing camera and microphone...');
       await onRequest();
     } catch (err) {
       console.error('Permission request error:', err);
@@ -498,18 +498,18 @@ function PermissionsStage({
         </svg>
       </div>
       
-      <h1 className="text-2xl font-bold mb-2">Zgłoś Drona</h1>
+      <h1 className="text-2xl font-bold mb-2">Report a Drone</h1>
       <p className="text-gray-400 mb-6 max-w-xs">
-        System wymaga dostępu do kamery, mikrofonu, lokalizacji i czujników ruchu.
+        The system requires access to camera, microphone, location and motion sensors.
       </p>
 
       {/* HTTPS Warning */}
       {!localSecureContext && (
         <div className="bg-red-900/50 border border-red-500 rounded-lg px-4 py-3 mb-4 max-w-xs">
-          <p className="text-red-300 text-sm font-bold mb-1">⚠️ Wymagane HTTPS</p>
+          <p className="text-red-300 text-sm font-bold mb-1">⚠️ HTTPS Required</p>
           <p className="text-red-400 text-xs">
-            Geolokalizacja i sensory wymagają bezpiecznego połączenia. 
-            Otwórz stronę przez <code className="bg-red-900 px-1 rounded">https://</code> lub <code className="bg-red-900 px-1 rounded">localhost</code>.
+            Geolocation and sensors require a secure connection. 
+            Open the page via <code className="bg-red-900 px-1 rounded">https://</code> or <code className="bg-red-900 px-1 rounded">localhost</code>.
           </p>
         </div>
       )}
@@ -526,12 +526,12 @@ function PermissionsStage({
       {isIOS && localSecureContext && (
         <div className="bg-yellow-900/30 border border-yellow-700 rounded-lg px-4 py-3 mb-4 max-w-xs">
           <p className="text-yellow-400 text-sm font-medium mb-2">
-            📱 Ważne dla iPhone/iPad:
+            📱 Important for iPhone/iPad:
           </p>
           <ul className="text-yellow-400/80 text-xs space-y-1 list-disc list-inside">
-            <li>Pojawią się okna z prośbą o dostęp</li>
-            <li>Zezwól na <strong>kamerę</strong>, <strong>mikrofon</strong> i <strong>lokalizację</strong></li>
-            <li>Jeśli kamera nie działa, przejdź do <strong>Ustawienia → Safari → Kamera</strong> i ustaw na "Pytaj" lub "Zezwól"</li>
+            <li>Permission dialogs will appear</li>
+            <li>Allow access to <strong>camera</strong>, <strong>microphone</strong> and <strong>location</strong></li>
+            <li>If camera doesn't work, go to <strong>Settings → Safari → Camera</strong> and set to "Ask" or "Allow"</li>
           </ul>
         </div>
       )}
@@ -541,7 +541,7 @@ function PermissionsStage({
           <div className="py-4 px-6 bg-zinc-800 rounded-xl">
             <div className="flex items-center justify-center gap-3">
               <div className="w-5 h-5 border-2 border-red-500 border-t-transparent rounded-full animate-spin" />
-              <span className="text-gray-300">{currentStep || 'Proszę czekać...'}</span>
+              <span className="text-gray-300">{currentStep || 'Please wait...'}</span>
             </div>
           </div>
         </div>
@@ -555,29 +555,29 @@ function PermissionsStage({
               : 'bg-zinc-700 cursor-not-allowed opacity-50'
           }`}
         >
-          {localSecureContext ? 'Zezwól i Kontynuuj' : 'HTTPS Wymagane'}
+          {localSecureContext ? 'Allow and Continue' : 'HTTPS Required'}
         </button>
       )}
 
       <p className="text-xs text-gray-500 mt-4 max-w-xs">
-        Wszystkie dane są szyfrowane i przesyłane bezpośrednio do służb ochrony infrastruktury.
+        All data is encrypted and transmitted directly to infrastructure protection services.
       </p>
 
       {/* Permission requirements list */}
       <div className="mt-8 text-left max-w-xs w-full">
-        <p className="text-xs text-gray-600 mb-2 uppercase tracking-wider">Wymagane uprawnienia:</p>
+        <p className="text-xs text-gray-600 mb-2 uppercase tracking-wider">Required permissions:</p>
         <ul className="space-y-1 text-sm text-gray-500">
           <li className="flex items-center gap-2">
-            <span>📸</span> Kamera (tylna)
+            <span>📸</span> Camera (rear)
           </li>
           <li className="flex items-center gap-2">
-            <span>🎤</span> Mikrofon
+            <span>🎤</span> Microphone
           </li>
           <li className="flex items-center gap-2">
-            <span>📍</span> Lokalizacja GPS
+            <span>📍</span> GPS Location
           </li>
           <li className="flex items-center gap-2">
-            <span>🔄</span> Czujniki ruchu i orientacji
+            <span>🔄</span> Motion and orientation sensors
           </li>
         </ul>
       </div>
@@ -637,7 +637,7 @@ function ReadyStage({
             {groundTruth ? (
               <>
                 <div className="w-2 h-2 bg-green-500 rounded-full" />
-                <span className="text-xs text-green-400">QR Zweryfikowany</span>
+                <span className="text-xs text-green-400">QR Verified</span>
               </>
             ) : location ? (
               <>
@@ -647,7 +647,7 @@ function ReadyStage({
             ) : (
               <>
                 <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-                <span className="text-xs text-red-400">Szukam GPS...</span>
+                <span className="text-xs text-red-400">Searching GPS...</span>
               </>
             )}
           </div>
@@ -657,7 +657,7 @@ function ReadyStage({
         <div className="absolute bottom-4 left-4 bg-black/70 rounded-lg px-3 py-2">
           <div className="flex items-center gap-2">
             <div className={`w-2 h-2 rounded-full ${motion ? 'bg-green-500' : 'bg-gray-500'}`} />
-            <span className="text-xs">Czujniki aktywne</span>
+            <span className="text-xs">Sensors active</span>
           </div>
         </div>
       </div>
@@ -669,10 +669,10 @@ function ReadyStage({
           className="w-full py-5 bg-red-600 hover:bg-red-700 rounded-xl font-bold text-xl transition-colors flex items-center justify-center gap-3"
         >
           <div className="w-4 h-4 rounded-full bg-white animate-pulse" />
-          Nagrywaj Drona (5s)
+          Record Drone (5s)
         </button>
         <p className="text-center text-xs text-gray-500 mt-2">
-          Skieruj telefon w stronę drona i trzymaj stabilnie
+          Point your phone at the drone and hold steady
         </p>
       </div>
     </div>
@@ -703,7 +703,7 @@ function CapturingStage({
         {/* Recording indicator */}
         <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-red-600 rounded-full px-4 py-2 flex items-center gap-2 animate-pulse">
           <div className="w-3 h-3 rounded-full bg-white" />
-          <span className="font-bold">NAGRYWANIE</span>
+          <span className="font-bold">RECORDING</span>
         </div>
 
         {/* Pulse ring */}
@@ -722,7 +722,7 @@ function CapturingStage({
           />
         </div>
         <p className="text-center text-sm text-gray-400 mt-2">
-          Zbieranie danych... {Math.round(progress)}%
+          Collecting data... {Math.round(progress)}%
         </p>
       </div>
     </div>
@@ -733,9 +733,9 @@ function ProcessingStage() {
   return (
     <div className="flex-1 flex flex-col items-center justify-center p-6">
       <div className="w-16 h-16 border-4 border-red-500 border-t-transparent rounded-full animate-spin mb-6" />
-      <h2 className="text-xl font-bold mb-2">Przetwarzanie...</h2>
+      <h2 className="text-xl font-bold mb-2">Processing...</h2>
       <p className="text-gray-400 text-center">
-        Analizowanie sygnału audio i weryfikacja danych
+        Analyzing audio signal and verifying data
       </p>
     </div>
   );
@@ -762,10 +762,10 @@ function CompleteStage({ result }: { result: ReportSubmissionResponse }) {
 
   const getThreatText = (level: string) => {
     switch (level) {
-      case 'RED': return 'KRYTYCZNE - Służby powiadomione';
-      case 'ORANGE': return 'PODWYŻSZONE - Alert wysłany';
-      case 'YELLOW': return 'OSTRZEŻENIE - Weryfikacja w toku';
-      default: return 'OK - Zgłoszenie zarejestrowane';
+      case 'RED': return 'CRITICAL - Services notified';
+      case 'ORANGE': return 'ELEVATED - Alert sent';
+      case 'YELLOW': return 'WARNING - Verification in progress';
+      default: return 'OK - Report registered';
     }
   };
 
@@ -796,7 +796,7 @@ function CompleteStage({ result }: { result: ReportSubmissionResponse }) {
       </div>
 
       <h2 className="text-xl font-bold mb-2">
-        {result.success ? 'Zgłoszenie Wysłane' : 'Błąd'}
+        {result.success ? 'Report Submitted' : 'Error'}
       </h2>
       
       <div className={`px-4 py-2 rounded-full ${getThreatColor(fullLevel)} mb-4`}>
@@ -809,7 +809,7 @@ function CompleteStage({ result }: { result: ReportSubmissionResponse }) {
       {result.riskScore !== undefined && (
         <div className="w-full max-w-sm mb-4">
           <div className="flex justify-between text-sm mb-1">
-            <span className="text-gray-400">Wynik ryzyka</span>
+            <span className="text-gray-400">Risk score</span>
             <span className="font-bold">{result.riskScore}/100</span>
           </div>
           <div className="h-3 bg-zinc-800 rounded-full overflow-hidden">
@@ -820,7 +820,7 @@ function CompleteStage({ result }: { result: ReportSubmissionResponse }) {
           </div>
           {result.confidence !== undefined && (
             <div className="text-xs text-gray-500 mt-1 text-right">
-              Pewność: {result.confidence}%
+              Confidence: {result.confidence}%
             </div>
           )}
         </div>
@@ -830,7 +830,7 @@ function CompleteStage({ result }: { result: ReportSubmissionResponse }) {
       {result.droneDetection && (
         <div className={`w-full max-w-sm ${getThreatBgColor(fullLevel)} rounded-lg p-4 mb-4`}>
           <h3 className="text-sm font-bold uppercase tracking-wider text-gray-400 mb-3">
-            Detekcja Drona (ML)
+            Drone Detection (ML)
           </h3>
           
           {/* Audio Detection */}
@@ -842,7 +842,7 @@ function CompleteStage({ result }: { result: ReportSubmissionResponse }) {
               </div>
               <div className="text-right">
                 <div className={`font-bold ${result.droneDetection.audio.detected ? getMlThreatColor(result.droneDetection.audio.threatLevel) : 'text-green-400'}`}>
-                  {result.droneDetection.audio.detected ? `${result.droneDetection.audio.type || 'Dron'}` : 'Brak'}
+                  {result.droneDetection.audio.detected ? `${result.droneDetection.audio.type || 'Drone'}` : 'None'}
                 </div>
                 <div className="text-xs text-gray-500">{result.droneDetection.audio.confidence}%</div>
               </div>
@@ -854,11 +854,11 @@ function CompleteStage({ result }: { result: ReportSubmissionResponse }) {
             <div className="flex items-center justify-between py-2 border-b border-white/10">
               <div className="flex items-center gap-2">
                 <span>📷</span>
-                <span className="text-sm">Wizualna ML</span>
+                <span className="text-sm">Visual ML</span>
               </div>
               <div className="text-right">
                 <div className={`font-bold ${result.droneDetection.visual.detected ? getMlThreatColor(result.droneDetection.visual.threatLevel) : 'text-green-400'}`}>
-                  {result.droneDetection.visual.detected ? `${result.droneDetection.visual.type || 'Dron'}` : 'Brak'}
+                  {result.droneDetection.visual.detected ? `${result.droneDetection.visual.type || 'Drone'}` : 'None'}
                 </div>
                 <div className="text-xs text-gray-500">{result.droneDetection.visual.confidence}%</div>
               </div>
@@ -874,7 +874,7 @@ function CompleteStage({ result }: { result: ReportSubmissionResponse }) {
               </div>
               <div className="text-right">
                 <div className={`font-bold ${result.droneDetection.fft.detected ? 'text-orange-400' : 'text-green-400'}`}>
-                  {result.droneDetection.fft.detected ? `${result.droneDetection.fft.estimatedType || 'Sygnał'}` : 'Brak'}
+                  {result.droneDetection.fft.detected ? `${result.droneDetection.fft.estimatedType || 'Signal'}` : 'None'}
                 </div>
                 {result.droneDetection.fft.detected && (
                   <div className="text-xs text-gray-500">{result.droneDetection.fft.dominantFrequency}Hz</div>
@@ -889,14 +889,14 @@ function CompleteStage({ result }: { result: ReportSubmissionResponse }) {
       {result.scoreBreakdown && (
         <div className="w-full max-w-sm bg-zinc-900 rounded-lg p-4 mb-4">
           <h3 className="text-sm font-bold uppercase tracking-wider text-gray-400 mb-3">
-            Rozkład Punktów
+            Score Breakdown
           </h3>
           <div className="space-y-2 text-sm">
             <ScoreRow label="Audio" score={result.scoreBreakdown.audio} max={30} icon="🔊" />
-            <ScoreRow label="Lokalizacja" score={result.scoreBreakdown.location} max={25} icon="📍" />
-            <ScoreRow label="IP/Sieć" score={result.scoreBreakdown.ip} max={20} icon="🌐" />
-            <ScoreRow label="Klaster" score={result.scoreBreakdown.clustering} max={15} icon="👥" />
-            <ScoreRow label="Walidacja" score={result.scoreBreakdown.validation} max={10} icon="✓" />
+            <ScoreRow label="Location" score={result.scoreBreakdown.location} max={25} icon="📍" />
+            <ScoreRow label="IP/Network" score={result.scoreBreakdown.ip} max={20} icon="🌐" />
+            <ScoreRow label="Cluster" score={result.scoreBreakdown.clustering} max={15} icon="👥" />
+            <ScoreRow label="Validation" score={result.scoreBreakdown.validation} max={10} icon="✓" />
           </div>
         </div>
       )}
@@ -905,7 +905,7 @@ function CompleteStage({ result }: { result: ReportSubmissionResponse }) {
       {result.riskFactors && result.riskFactors.length > 0 && (
         <div className="w-full max-w-sm bg-red-900/20 border border-red-900 rounded-lg p-4 mb-4">
           <h3 className="text-sm font-bold uppercase tracking-wider text-red-400 mb-2">
-            Czynniki Ryzyka
+            Risk Factors
           </h3>
           <ul className="text-sm text-red-300 space-y-1">
             {result.riskFactors.map((factor, i) => (
@@ -922,7 +922,7 @@ function CompleteStage({ result }: { result: ReportSubmissionResponse }) {
       {result.requiredActions && result.requiredActions.length > 0 && (
         <div className="w-full max-w-sm bg-orange-900/20 border border-orange-700 rounded-lg p-4 mb-4">
           <h3 className="text-sm font-bold uppercase tracking-wider text-orange-400 mb-2">
-            Wymagane Działania
+            Required Actions
           </h3>
           <ul className="text-sm text-orange-300 space-y-1">
             {result.requiredActions.map((action, i) => (
@@ -942,7 +942,7 @@ function CompleteStage({ result }: { result: ReportSubmissionResponse }) {
         onClick={() => window.location.reload()}
         className="px-6 py-3 bg-zinc-800 hover:bg-zinc-700 rounded-lg transition-colors"
       >
-        Nowe Zgłoszenie
+        New Report
       </button>
     </div>
   );
@@ -973,14 +973,14 @@ function ErrorStage({ error, onRetry }: { error: string | null; onRetry: () => v
         </svg>
       </div>
 
-      <h2 className="text-xl font-bold mb-2">Błąd</h2>
-      <p className="text-gray-400 mb-6">{error || 'Nieznany błąd'}</p>
+      <h2 className="text-xl font-bold mb-2">Error</h2>
+      <p className="text-gray-400 mb-6">{error || 'Unknown error'}</p>
 
       <button
         onClick={onRetry}
         className="px-6 py-3 bg-red-600 hover:bg-red-700 rounded-lg transition-colors"
       >
-        Spróbuj Ponownie
+        Try Again
       </button>
     </div>
   );

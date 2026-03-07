@@ -99,7 +99,7 @@ export default function DispatcherPage() {
 
   const handleForwardToSOK = async (cluster: ReportCluster) => {
     // In production, this would send to SOK system
-    alert(`Alert przekazany do SOK!\nID: ${cluster.id}\nLokalizacja: ${cluster.nearestRailway}`);
+    alert(`Alert forwarded to SOK!\nID: ${cluster.id}\nLocation: ${cluster.nearestRailway}`);
   };
 
   const handleDismiss = (clusterId: string) => {
@@ -112,11 +112,11 @@ export default function DispatcherPage() {
         <div className="bg-zinc-900 rounded-xl p-8 max-w-md w-full">
           <div className="flex items-center justify-center gap-3 mb-6">
             <div className="w-4 h-4 rounded-full bg-red-500" />
-            <h1 className="text-xl font-bold text-white">EDTH Konsola Dyspozytora</h1>
+            <h1 className="text-xl font-bold text-white">EDTH Dispatcher Console</h1>
           </div>
           
           <p className="text-gray-400 text-sm text-center mb-6">
-            Panel dla autoryzowanych dyspozytorów SOK/ABW
+            Panel for authorized SOK/ABW dispatchers
           </p>
 
           <div className="space-y-4">
@@ -124,7 +124,7 @@ export default function DispatcherPage() {
               type="password"
               value={apiKey}
               onChange={(e) => setApiKey(e.target.value)}
-              placeholder="Klucz API"
+              placeholder="API Key"
               className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-3 text-white focus:border-red-500 focus:outline-none"
               onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
             />
@@ -133,12 +133,12 @@ export default function DispatcherPage() {
               onClick={handleLogin}
               className="w-full py-3 bg-red-600 hover:bg-red-700 rounded-lg font-bold text-white transition-colors"
             >
-              Zaloguj
+              Login
             </button>
           </div>
 
           <p className="text-xs text-gray-600 text-center mt-4">
-            Demo: wpisz dowolny klucz aby kontynuować
+            Demo: enter any key to continue
           </p>
         </div>
       </div>
@@ -152,10 +152,10 @@ export default function DispatcherPage() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse" />
-            <span className="font-bold">EDTH Konsola Dyspozytora</span>
+            <span className="font-bold">EDTH Dispatcher Console</span>
             <span className="text-xs text-gray-500">|</span>
             <span className="text-xs text-gray-400">
-              Ostatnia aktualizacja: {lastUpdate?.toLocaleTimeString('pl-PL')}
+              Last update: {lastUpdate?.toLocaleTimeString('en-US')}
             </span>
           </div>
           
@@ -163,7 +163,7 @@ export default function DispatcherPage() {
             onClick={() => setIsAuthenticated(false)}
             className="text-sm text-gray-400 hover:text-white"
           >
-            Wyloguj
+            Logout
           </button>
         </div>
       </header>
@@ -172,19 +172,19 @@ export default function DispatcherPage() {
       <div className="bg-zinc-900/50 border-b border-zinc-800 px-6 py-3">
         <div className="flex gap-8">
           <div>
-            <span className="text-gray-500 text-xs">Zgłoszenia 24h</span>
+            <span className="text-gray-500 text-xs">Reports 24h</span>
             <div className="text-2xl font-bold">{stats.totalReports24h}</div>
           </div>
           <div>
-            <span className="text-gray-500 text-xs">Aktywne Incydenty</span>
+            <span className="text-gray-500 text-xs">Active Incidents</span>
             <div className="text-2xl font-bold text-yellow-400">{stats.activeIncidents}</div>
           </div>
           <div>
-            <span className="text-gray-500 text-xs">Alerty Krytyczne</span>
+            <span className="text-gray-500 text-xs">Critical Alerts</span>
             <div className="text-2xl font-bold text-red-500">{stats.criticalAlerts}</div>
           </div>
           <div>
-            <span className="text-gray-500 text-xs">Śr. Czas Reakcji</span>
+            <span className="text-gray-500 text-xs">Avg. Response Time</span>
             <div className="text-2xl font-bold">{stats.avgResponseTime}min</div>
           </div>
         </div>
@@ -196,12 +196,12 @@ export default function DispatcherPage() {
         <div className="w-96 border-r border-zinc-800 overflow-auto">
           <div className="p-4">
             <h2 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-3">
-              Aktywne Incydenty
+              Active Incidents
             </h2>
             
             {clusters.length === 0 ? (
               <div className="text-center py-12 text-gray-600">
-                Brak aktywnych incydentów
+                No active incidents
               </div>
             ) : (
               <div className="space-y-3">
@@ -228,7 +228,7 @@ export default function DispatcherPage() {
             <div className="flex items-center justify-center h-full text-gray-600">
               <div className="text-center">
                 <div className="text-6xl mb-4">🛡️</div>
-                <p>Wybierz incydent aby zobaczyć szczegóły</p>
+                <p>Select an incident to see details</p>
               </div>
             </div>
           )}
@@ -261,7 +261,7 @@ function IncidentCard({
 
   const getAge = (timestamp: number) => {
     const minutes = Math.floor((Date.now() - timestamp) / 60000);
-    if (minutes < 1) return 'teraz';
+    if (minutes < 1) return 'now';
     if (minutes < 60) return `${minutes}min`;
     return `${Math.floor(minutes / 60)}h ${minutes % 60}min`;
   };
@@ -290,7 +290,7 @@ function IncidentCard({
 
       <h3 className="font-bold mb-1">{cluster.nearestRailway}</h3>
       <p className="text-sm text-gray-400 mb-2">
-        {cluster.distanceToRailway}m od torów • {cluster.reportCount} zgłoszeń
+        {cluster.distanceToRailway}m from tracks • {cluster.reportCount} reports
       </p>
 
       <div className="flex gap-2 mt-3">
@@ -299,7 +299,7 @@ function IncidentCard({
             onClick={(e) => { e.stopPropagation(); onForward(); }}
             className="flex-1 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-sm font-bold transition-colors"
           >
-            Przekaż do SOK
+            Forward to SOK
           </button>
         )}
         <button
@@ -325,33 +325,33 @@ function IncidentDetail({ cluster }: { cluster: ReportCluster }) {
 
       <div className="grid grid-cols-2 gap-4 mb-6">
         <div className="bg-zinc-800 rounded-xl p-4">
-          <h3 className="text-sm text-gray-400 mb-1">Zgłoszenia</h3>
+          <h3 className="text-sm text-gray-400 mb-1">Reports</h3>
           <p className="text-3xl font-bold">{cluster.reportCount}</p>
         </div>
         <div className="bg-zinc-800 rounded-xl p-4">
-          <h3 className="text-sm text-gray-400 mb-1">Urządzenia</h3>
+          <h3 className="text-sm text-gray-400 mb-1">Devices</h3>
           <p className="text-3xl font-bold">{cluster.devices.length}</p>
         </div>
         <div className="bg-zinc-800 rounded-xl p-4">
-          <h3 className="text-sm text-gray-400 mb-1">Odległość od Torów</h3>
+          <h3 className="text-sm text-gray-400 mb-1">Distance from Tracks</h3>
           <p className="text-3xl font-bold">{cluster.distanceToRailway}m</p>
         </div>
         <div className="bg-zinc-800 rounded-xl p-4">
-          <h3 className="text-sm text-gray-400 mb-1">Audio Potwierdzone</h3>
+          <h3 className="text-sm text-gray-400 mb-1">Audio Confirmed</h3>
           <p className="text-3xl font-bold">{cluster.audioConfirmed ? '✓' : '—'}</p>
         </div>
       </div>
 
       <div className="bg-zinc-800 rounded-xl p-4 mb-6">
-        <h3 className="text-sm text-gray-400 mb-3">Oś Czasu</h3>
+        <h3 className="text-sm text-gray-400 mb-3">Timeline</h3>
         <div className="space-y-2 text-sm">
           <div className="flex justify-between">
-            <span>Pierwsze zgłoszenie:</span>
-            <span className="font-mono">{new Date(cluster.firstReport).toLocaleTimeString('pl-PL')}</span>
+            <span>First report:</span>
+            <span className="font-mono">{new Date(cluster.firstReport).toLocaleTimeString('en-US')}</span>
           </div>
           <div className="flex justify-between">
-            <span>Ostatnie zgłoszenie:</span>
-            <span className="font-mono">{new Date(cluster.lastReport).toLocaleTimeString('pl-PL')}</span>
+            <span>Last report:</span>
+            <span className="font-mono">{new Date(cluster.lastReport).toLocaleTimeString('en-US')}</span>
           </div>
         </div>
       </div>
@@ -360,8 +360,8 @@ function IncidentDetail({ cluster }: { cluster: ReportCluster }) {
       <div className="bg-zinc-800 rounded-xl h-64 flex items-center justify-center">
         <div className="text-center text-gray-600">
           <div className="text-4xl mb-2">🗺️</div>
-          <p>Mapa z triangulacją pozycji drona</p>
-          <p className="text-sm">(Integracja z Mapbox/Leaflet)</p>
+          <p>Map with drone position triangulation</p>
+          <p className="text-sm">(Mapbox/Leaflet integration)</p>
         </div>
       </div>
     </div>
