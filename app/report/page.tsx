@@ -397,23 +397,38 @@ function PermissionsStage({
         
         // Request DeviceMotion permission
         if (typeof (DeviceMotionEvent as any).requestPermission === 'function') {
-          const motionPermission = await (DeviceMotionEvent as any).requestPermission();
-          if (motionPermission !== 'granted') {
-            console.warn('Motion permission denied');
+          try {
+            const motionPermission = await (DeviceMotionEvent as any).requestPermission();
+            if (motionPermission !== 'granted') {
+              console.warn('Motion permission denied');
+            }
+          } catch (motionErr) {
+            console.warn('Motion permission request failed:', motionErr);
           }
         }
         
         // Request DeviceOrientation permission
         if (typeof (DeviceOrientationEvent as any).requestPermission === 'function') {
-          const orientationPermission = await (DeviceOrientationEvent as any).requestPermission();
-          if (orientationPermission !== 'granted') {
-            console.warn('Orientation permission denied');
+          try {
+            const orientationPermission = await (DeviceOrientationEvent as any).requestPermission();
+            if (orientationPermission !== 'granted') {
+              console.warn('Orientation permission denied');
+            }
+          } catch (orientationErr) {
+            console.warn('Orientation permission request failed:', orientationErr);
           }
         }
+        
+        // iOS camera permission - must be requested from user gesture
+        // We'll show a step indicator before requesting camera
+        setCurrentStep('Żądanie dostępu do kamery...');
+        
+        // Small delay to ensure UI updates before permission dialog
+        await new Promise(resolve => setTimeout(resolve, 100));
       }
       
       // After iOS-specific permissions, call the main handler
-      setCurrentStep('Inicjalizacja...');
+      setCurrentStep('Inicjalizacja kamery i mikrofonu...');
       await onRequest();
     } catch (err) {
       console.error('Permission request error:', err);
@@ -456,9 +471,14 @@ function PermissionsStage({
 
       {isIOS && localSecureContext && (
         <div className="bg-yellow-900/30 border border-yellow-700 rounded-lg px-4 py-3 mb-4 max-w-xs">
-          <p className="text-yellow-400 text-sm">
-            📱 iPhone: Po naciśnięciu przycisku pojawią się okna z prośbą o dostęp. Zezwól na wszystkie.
+          <p className="text-yellow-400 text-sm font-medium mb-2">
+            📱 Ważne dla iPhone/iPad:
           </p>
+          <ul className="text-yellow-400/80 text-xs space-y-1 list-disc list-inside">
+            <li>Pojawią się okna z prośbą o dostęp</li>
+            <li>Zezwól na <strong>kamerę</strong>, <strong>mikrofon</strong> i <strong>lokalizację</strong></li>
+            <li>Jeśli kamera nie działa, przejdź do <strong>Ustawienia → Safari → Kamera</strong> i ustaw na "Pytaj" lub "Zezwól"</li>
+          </ul>
         </div>
       )}
 
@@ -530,10 +550,12 @@ function ReadyStage({
     <div className="flex-1 flex flex-col">
       {/* Video preview */}
       <div className="relative flex-1 bg-zinc-900">
+        {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
         <video
           ref={videoRef}
           autoPlay
           playsInline
+          webkit-playsinline="true"
           muted
           className="absolute inset-0 w-full h-full object-cover"
         />
@@ -614,10 +636,12 @@ function CapturingStage({
     <div className="flex-1 flex flex-col">
       {/* Video preview */}
       <div className="relative flex-1 bg-zinc-900">
+        {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
         <video
           ref={videoRef}
           autoPlay
           playsInline
+          webkit-playsinline="true"
           muted
           className="absolute inset-0 w-full h-full object-cover"
         />

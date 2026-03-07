@@ -39,16 +39,43 @@ export function useMediaCapture(options: UseMediaCaptureOptions = {}) {
         return false;
       }
 
-      // Request video with environment camera (back camera on mobile)
-      // Use 'exact' facingMode only if we detect mobile device
+      // Detect iOS specifically
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
       const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-      
-      const videoConstraints: MediaTrackConstraints = isMobile
-        ? {
-            facingMode: { exact: 'environment' },
-            width: { ideal: 1920, max: 1920 },
-            height: { ideal: 1080, max: 1080 },
+
+      // On iOS, check if permissions API is available and query camera status
+      if (isIOS && navigator.permissions) {
+        try {
+          // Note: camera permission query may not be available on all browsers
+          const cameraPermission = await navigator.permissions.query({ name: 'camera' as PermissionName });
+          console.log('[Media] iOS camera permission status:', cameraPermission.state);
+          
+          if (cameraPermission.state === 'denied') {
+            setError('Dostęp do kamery zablokowany. Przejdź do Ustawienia → Safari → Kamera i zezwól na dostęp.');
+            return false;
           }
+        } catch (permErr) {
+          // Permission query not supported, continue with getUserMedia
+          console.log('[Media] Permission query not supported, proceeding with getUserMedia');
+        }
+      }
+      
+      // Request video with environment camera (back camera on mobile)
+      // iOS Safari has specific requirements for camera constraints
+      const videoConstraints: MediaTrackConstraints = isMobile
+        ? isIOS 
+          ? {
+              // iOS works better with ideal rather than exact for facingMode
+              facingMode: { ideal: 'environment' },
+              width: { ideal: 1920 },
+              height: { ideal: 1080 },
+            }
+          : {
+              facingMode: { exact: 'environment' },
+              width: { ideal: 1920, max: 1920 },
+              height: { ideal: 1080, max: 1080 },
+            }
         : {
             facingMode: 'environment',
             width: { ideal: 1920 },
@@ -58,6 +85,7 @@ export function useMediaCapture(options: UseMediaCaptureOptions = {}) {
       let mediaStream: MediaStream;
       
       try {
+        console.log('[Media] Requesting camera with constraints:', JSON.stringify(videoConstraints));
         mediaStream = await navigator.mediaDevices.getUserMedia({
           video: videoConstraints,
           audio: {
@@ -66,22 +94,55 @@ export function useMediaCapture(options: UseMediaCaptureOptions = {}) {
             autoGainControl: false,
           },
         });
-      } catch (firstError) {
+      } catch (firstError: any) {
+        console.warn('[Media] First camera attempt failed:', firstError?.name, firstError?.message);
+        
+        // Handle specific iOS errors
+        if (firstError?.name === 'NotAllowedError') {
+          if (isIOS) {
+            setError('Dostęp do kamery zablokowany. Przejdź do Ustawienia → Safari → Kamera i zmień na "Zezwól" lub "Pytaj".');
+          } else {
+            setError('Dostęp do kamery zablokowany. Zezwól na dostęp w ustawieniach przeglądarki.');
+          }
+          return false;
+        }
+        
+        if (firstError?.name === 'NotFoundError') {
+          setError('Nie znaleziono kamery. Upewnij się, że urządzenie ma kamerę.');
+          return false;
+        }
+        
         // If exact facingMode fails, try without it (fallback for devices without back camera)
-        console.warn('Back camera failed, trying any camera:', firstError);
-        mediaStream = await navigator.mediaDevices.getUserMedia({
-          video: {
-            width: { ideal: 1920 },
-            height: { ideal: 1080 },
-          },
-          audio: {
-            echoCancellation: false,
-            noiseSuppression: false,
-            autoGainControl: false,
-          },
-        });
+        console.log('[Media] Trying fallback camera constraints...');
+        try {
+          mediaStream = await navigator.mediaDevices.getUserMedia({
+            video: {
+              width: { ideal: 1920 },
+              height: { ideal: 1080 },
+            },
+            audio: {
+              echoCancellation: false,
+              noiseSuppression: false,
+              autoGainControl: false,
+            },
+          });
+        } catch (fallbackError: any) {
+          console.error('[Media] Fallback camera also failed:', fallbackError?.name, fallbackError?.message);
+          
+          if (fallbackError?.name === 'NotAllowedError') {
+            if (isIOS) {
+              setError('Dostęp do kamery zablokowany. Przejdź do Ustawienia → Safari → Kamera i zmień na "Zezwól".');
+            } else {
+              setError('Dostęp do kamery zablokowany.');
+            }
+          } else {
+            setError(fallbackError?.message || 'Nie można uzyskać dostępu do kamery');
+          }
+          return false;
+        }
       }
 
+      console.log('[Media] Camera stream obtained successfully');
       setStream(mediaStream);
       setIsPermissionGranted(true);
       
@@ -90,19 +151,47 @@ export function useMediaCapture(options: UseMediaCaptureOptions = {}) {
         // Important for iOS: must set these attributes
         videoRef.current.setAttribute('playsinline', 'true');
         videoRef.current.setAttribute('webkit-playsinline', 'true');
+        videoRef.current.setAttribute('autoplay', 'true');
         videoRef.current.muted = true;
+        
+        // iOS Safari requires load() before play() in some cases
+        if (isIOS) {
+          videoRef.current.load();
+        }
         
         try {
           await videoRef.current.play();
+          console.log('[Media] Video playback started');
         } catch (playError) {
-          console.warn('Video autoplay failed, user interaction may be needed:', playError);
+          console.warn('[Media] Video autoplay failed, user interaction may be needed:', playError);
+          // On iOS, we might need to set up a play on user interaction
         }
       }
 
       return true;
-    } catch (err) {
-      console.error('[Media] Initialization error:', err);
-      const message = err instanceof Error ? err.message : 'Failed to access camera/microphone';
+    } catch (err: any) {
+      console.error('[Media] Initialization error:', err?.name, err?.message);
+      
+      // Provide iOS-specific error messages
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+      let message: string;
+      
+      if (err?.name === 'NotAllowedError' || err?.name === 'PermissionDeniedError') {
+        message = isIOS 
+          ? 'Dostęp do kamery zablokowany. Przejdź do Ustawienia iPhone → Safari → Kamera i zezwól na dostęp.'
+          : 'Dostęp do kamery zablokowany. Zezwól na dostęp i odśwież stronę.';
+      } else if (err?.name === 'NotFoundError' || err?.name === 'DevicesNotFoundError') {
+        message = 'Nie znaleziono kamery.';
+      } else if (err?.name === 'NotReadableError' || err?.name === 'TrackStartError') {
+        message = 'Kamera jest używana przez inną aplikację. Zamknij inne aplikacje i spróbuj ponownie.';
+      } else if (err?.name === 'OverconstrainedError') {
+        message = 'Żądana konfiguracja kamery nie jest obsługiwana.';
+      } else if (err?.name === 'SecurityError') {
+        message = 'Dostęp do kamery wymaga połączenia HTTPS.';
+      } else {
+        message = err?.message || 'Nie można uzyskać dostępu do kamery/mikrofonu';
+      }
+      
       setError(message);
       setIsPermissionGranted(false);
       return false;
